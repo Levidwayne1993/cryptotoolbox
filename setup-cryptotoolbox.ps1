@@ -1,0 +1,2311 @@
+# ============================================
+# CryptoToolbox - Complete Setup Script
+# Paper Trading + Analytics + Signals + News
+# ============================================
+
+$ErrorActionPreference = "Stop"
+
+# Create project directory
+$PROJECT = "C:\Users\Erwin\OneDrive\CryptoToolbox"
+if (Test-Path $PROJECT) { Remove-Item -Recurse -Force $PROJECT }
+New-Item -ItemType Directory -Force -Path $PROJECT | Out-Null
+Set-Location $PROJECT
+
+Write-Host "Creating CryptoToolbox project..." -ForegroundColor Cyan
+
+@'
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+'@ | Set-Content -Path ".env.local.example" -Encoding UTF8
+
+@'
+node_modules/
+.next/
+out/
+.env.local
+.env*.local
+*.tsbuildinfo
+next-env.d.ts
+.vercel
+'@ | Set-Content -Path ".gitignore" -Encoding UTF8
+
+@'
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  images: {
+    remotePatterns: [
+      { protocol: 'https', hostname: 'assets.coingecko.com' },
+      { protocol: 'https', hostname: 'coin-images.coingecko.com' },
+      { protocol: 'https', hostname: '**.reddit.com' },
+    ],
+  },
+};
+
+module.exports = nextConfig;
+'@ | Set-Content -Path "next.config.js" -Encoding UTF8
+
+@'
+{
+  "name": "cryptotoolbox",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "next": "14.2.5",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "@supabase/supabase-js": "^2.45.0",
+    "recharts": "^2.12.7"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.4",
+    "@types/node": "^20.14.12",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "tailwindcss": "^3.4.7",
+    "postcss": "^8.4.40",
+    "autoprefixer": "^10.4.19",
+    "eslint": "^8.57.0",
+    "eslint-config-next": "14.2.5"
+  }
+}
+'@ | Set-Content -Path "package.json" -Encoding UTF8
+
+@'
+module.exports = {
+  plugins: {
+    tailwindcss: {},
+    autoprefixer: {},
+  },
+};
+'@ | Set-Content -Path "postcss.config.js" -Encoding UTF8
+
+@'
+import type { Config } from 'tailwindcss';
+
+const config: Config = {
+  content: [
+    './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/components/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/app/**/*.{js,ts,jsx,tsx,mdx}',
+  ],
+  theme: {
+    extend: {
+      colors: {
+        crypto: {
+          dark: '#0a0e17',
+          card: '#111827',
+          border: '#1f2937',
+          accent: '#3b82f6',
+          green: '#10b981',
+          red: '#ef4444',
+          yellow: '#f59e0b',
+          purple: '#8b5cf6',
+        },
+      },
+    },
+  },
+  plugins: [],
+};
+export default config;
+'@ | Set-Content -Path "tailwind.config.ts" -Encoding UTF8
+
+@'
+{
+  "compilerOptions": {
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "incremental": true,
+    "plugins": [{ "name": "next" }],
+    "paths": { "@/*": ["./src/*"] }
+  },
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "exclude": ["node_modules"]
+}
+'@ | Set-Content -Path "tsconfig.json" -Encoding UTF8
+
+@'
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground: #e5e7eb;
+  --background: #0a0e17;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #111827;
+}
+::-webkit-scrollbar-thumb {
+  background: #374151;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #4b5563;
+}
+
+/* Glow effects */
+.glow-green {
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.15);
+}
+.glow-red {
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.15);
+}
+.glow-blue {
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.15);
+}
+
+/* Animations */
+@keyframes pulse-slow {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+.animate-pulse-slow {
+  animation: pulse-slow 3s ease-in-out infinite;
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-slide-up {
+  animation: slideUp 0.3s ease-out;
+}
+
+/* Trade flash */
+.flash-green {
+  animation: flashGreen 0.5s ease-out;
+}
+@keyframes flashGreen {
+  0% { background-color: rgba(16, 185, 129, 0.3); }
+  100% { background-color: transparent; }
+}
+.flash-red {
+  animation: flashRed 0.5s ease-out;
+}
+@keyframes flashRed {
+  0% { background-color: rgba(239, 68, 68, 0.3); }
+  100% { background-color: transparent; }
+}
+'@ | Set-Content -Path "src\app\globals.css" -Encoding UTF8
+
+@'
+import type { Metadata } from 'next';
+import './globals.css';
+import Navbar from '@/components/Navbar';
+
+export const metadata: Metadata = {
+  title: 'CryptoToolbox - Paper Trading & Analytics',
+  description: 'Practice crypto trading with fake money using real market prices. Analytical tools, signals, and news aggregation.',
+  keywords: ['crypto', 'paper trading', 'bitcoin', 'analytics', 'trading simulator'],
+  openGraph: {
+    title: 'CryptoToolbox - Paper Trading & Analytics',
+    description: 'Practice crypto trading risk-free with $10,000 in paper money.',
+    type: 'website',
+  },
+};
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en">
+      <body className="min-h-screen bg-crypto-dark">
+        <Navbar />
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          {children}
+        </main>
+      </body>
+    </html>
+  );
+}
+'@ | Set-Content -Path "src\app\layout.tsx" -Encoding UTF8
+
+@'
+'use client';
+
+import { useEffect, useState } from 'react';
+import { CryptoPrice } from '@/types';
+import { getPortfolio, formatCurrency, formatPercent, calculatePnL } from '@/lib/trading';
+import MarketOverview from '@/components/MarketOverview';
+import PriceCard from '@/components/PriceCard';
+import Link from 'next/link';
+
+export default function Dashboard() {
+  const [prices, setPrices] = useState<CryptoPrice[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/prices')
+      .then(r => r.json())
+      .then(data => { setPrices(Array.isArray(data) ? data : []); setLoading(false); })
+      .catch(() => setLoading(false));
+
+    const interval = setInterval(() => {
+      fetch('/api/prices')
+        .then(r => r.json())
+        .then(data => { if (Array.isArray(data)) setPrices(data); })
+        .catch(() => {});
+    }, 60000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const portfolio = getPortfolio();
+  const { totalValue, totalPnL, totalPnLPercent } = calculatePnL(portfolio.holdings, prices);
+  const totalPortfolioValue = portfolio.cash + totalValue;
+
+  const topGainers = [...prices].sort((a, b) => b.price_change_percentage_24h - a.price_change_percentage_24h).slice(0, 3);
+  const topLosers = [...prices].sort((a, b) => a.price_change_percentage_24h - b.price_change_percentage_24h).slice(0, 3);
+
+  return (
+    <div>
+      {/* Hero */}
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold mb-2">
+          <span className="bg-gradient-to-r from-crypto-accent to-crypto-purple bg-clip-text text-transparent">
+            CryptoToolbox
+          </span>
+        </h1>
+        <p className="text-gray-400">Paper trade crypto with real market prices. Start with $10,000 — or set any amount.</p>
+      </div>
+
+      {/* Portfolio Summary */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        <div className="bg-crypto-card border border-crypto-border rounded-xl p-5 glow-blue">
+          <p className="text-xs text-gray-500 uppercase tracking-wider">Portfolio Value</p>
+          <p className="text-2xl font-bold mt-1">{formatCurrency(totalPortfolioValue)}</p>
+          <p className="text-xs text-gray-500 mt-1">Started with {formatCurrency(portfolio.startingCash)}</p>
+        </div>
+        <div className="bg-crypto-card border border-crypto-border rounded-xl p-5">
+          <p className="text-xs text-gray-500 uppercase tracking-wider">Cash Available</p>
+          <p className="text-2xl font-bold mt-1">{formatCurrency(portfolio.cash)}</p>
+        </div>
+        <div className="bg-crypto-card border border-crypto-border rounded-xl p-5">
+          <p className="text-xs text-gray-500 uppercase tracking-wider">Holdings Value</p>
+          <p className="text-2xl font-bold mt-1">{formatCurrency(totalValue)}</p>
+          <p className="text-xs text-gray-500 mt-1">{portfolio.holdings.length} assets</p>
+        </div>
+        <div className={`bg-crypto-card border rounded-xl p-5 ${totalPnL >= 0 ? 'border-crypto-green/30 glow-green' : 'border-crypto-red/30 glow-red'}`}>
+          <p className="text-xs text-gray-500 uppercase tracking-wider">Total P&L</p>
+          <p className={`text-2xl font-bold mt-1 ${totalPnL >= 0 ? 'text-crypto-green' : 'text-crypto-red'}`}>
+            {formatCurrency(totalPnL)}
+          </p>
+          <p className={`text-xs mt-1 ${totalPnL >= 0 ? 'text-crypto-green' : 'text-crypto-red'}`}>
+            {formatPercent(totalPnLPercent)}
+          </p>
+        </div>
+      </div>
+
+      {/* Market Overview */}
+      <h2 className="text-xl font-bold mb-4">Market Overview</h2>
+      <MarketOverview />
+
+      {/* Top Movers */}
+      {!loading && prices.length > 0 && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+          <div>
+            <h3 className="text-lg font-bold mb-4 text-crypto-green">🚀 Top Gainers (24h)</h3>
+            <div className="space-y-3">
+              {topGainers.map(coin => (
+                <Link key={coin.id} href={`/trade?coin=${coin.id}`} className="flex items-center justify-between bg-crypto-card border border-crypto-border rounded-xl p-4 hover:border-crypto-green/50 transition-all">
+                  <div className="flex items-center space-x-3">
+                    <img src={coin.image} alt={coin.name} className="w-8 h-8 rounded-full" />
+                    <div>
+                      <p className="font-medium text-sm">{coin.name}</p>
+                      <p className="text-xs text-gray-500">{formatCurrency(coin.current_price)}</p>
+                    </div>
+                  </div>
+                  <span className="text-crypto-green font-bold">{formatPercent(coin.price_change_percentage_24h)}</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+          <div>
+            <h3 className="text-lg font-bold mb-4 text-crypto-red">📉 Top Losers (24h)</h3>
+            <div className="space-y-3">
+              {topLosers.map(coin => (
+                <Link key={coin.id} href={`/trade?coin=${coin.id}`} className="flex items-center justify-between bg-crypto-card border border-crypto-border rounded-xl p-4 hover:border-crypto-red/50 transition-all">
+                  <div className="flex items-center space-x-3">
+                    <img src={coin.image} alt={coin.name} className="w-8 h-8 rounded-full" />
+                    <div>
+                      <p className="font-medium text-sm">{coin.name}</p>
+                      <p className="text-xs text-gray-500">{formatCurrency(coin.current_price)}</p>
+                    </div>
+                  </div>
+                  <span className="text-crypto-red font-bold">{formatPercent(coin.price_change_percentage_24h)}</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* All Coins */}
+      <h2 className="text-xl font-bold mb-4">Top 50 Cryptocurrencies</h2>
+      {loading ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {[...Array(8)].map((_, i) => (
+            <div key={i} className="bg-crypto-card border border-crypto-border rounded-xl p-4 animate-pulse">
+              <div className="h-8 bg-gray-700 rounded w-2/3 mb-4" />
+              <div className="h-6 bg-gray-700 rounded w-1/2" />
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {prices.map(coin => (
+            <PriceCard key={coin.id} coin={coin} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+'@ | Set-Content -Path "src\app\page.tsx" -Encoding UTF8
+
+@'
+export const dynamic = 'force-dynamic';
+
+import { NextRequest, NextResponse } from 'next/server';
+
+interface RedditPost {
+  data: {
+    id: string;
+    title: string;
+    url: string;
+    subreddit: string;
+    created_utc: number;
+    thumbnail: string;
+    ups: number;
+    num_comments: number;
+  };
+}
+
+export async function GET(request: NextRequest) {
+  const { searchParams } = new URL(request.url);
+  const limit = parseInt(searchParams.get('limit') || '20');
+
+  try {
+    const subreddits = ['cryptocurrency', 'bitcoin', 'ethereum', 'CryptoMarkets'];
+    const allArticles: Array<{
+      id: string;
+      title: string;
+      url: string;
+      source: string;
+      thumbnail?: string;
+      created_at: string;
+      sentiment?: string;
+    }> = [];
+
+    const results = await Promise.allSettled(
+      subreddits.map(sub =>
+        fetch(`https://www.reddit.com/r/${sub}/hot.json?limit=10`, {
+          headers: { 'User-Agent': 'CryptoToolbox/1.0' },
+          next: { revalidate: 300 },
+        }).then(r => r.json())
+      )
+    );
+
+    results.forEach((result, idx) => {
+      if (result.status === 'fulfilled' && result.value?.data?.children) {
+        result.value.data.children.forEach((post: RedditPost) => {
+          const d = post.data;
+          if (!d.title) return;
+
+          const titleLower = d.title.toLowerCase();
+          let sentiment: string = 'neutral';
+          const bullish = ['bull', 'moon', 'surge', 'soar', 'pump', 'rally', 'gain', 'high', 'record', 'buy', 'breakout', 'all-time'];
+          const bearish = ['bear', 'crash', 'dump', 'drop', 'fall', 'plunge', 'sell', 'fear', 'scam', 'hack', 'fraud', 'loss'];
+          if (bullish.some(w => titleLower.includes(w))) sentiment = 'positive';
+          if (bearish.some(w => titleLower.includes(w))) sentiment = 'negative';
+
+          allArticles.push({
+            id: d.id,
+            title: d.title,
+            url: `https://reddit.com${d.url || ''}`,
+            source: `r/${subreddits[idx]}`,
+            thumbnail: d.thumbnail && d.thumbnail.startsWith('http') ? d.thumbnail : undefined,
+            created_at: new Date(d.created_utc * 1000).toISOString(),
+            sentiment,
+          });
+        });
+      }
+    });
+
+    // Sort by date, remove duplicates
+    const seen = new Set<string>();
+    const unique = allArticles
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      .filter(a => {
+        if (seen.has(a.id)) return false;
+        seen.add(a.id);
+        return true;
+      })
+      .slice(0, limit);
+
+    return NextResponse.json({ articles: unique });
+  } catch (error) {
+    console.error('News API error:', error);
+    return NextResponse.json({ articles: [] });
+  }
+}
+'@ | Set-Content -Path "src\app\api\news\route.ts" -Encoding UTF8
+
+@'
+export const dynamic = 'force-dynamic';
+
+import { NextRequest, NextResponse } from 'next/server';
+
+const BASE_URL = 'https://api.coingecko.com/api/v3';
+
+export async function GET(request: NextRequest) {
+  const { searchParams } = new URL(request.url);
+  const type = searchParams.get('type');
+  const ids = searchParams.get('ids');
+  const page = searchParams.get('page') || '1';
+
+  try {
+    if (type === 'global') {
+      const [globalRes, fgRes] = await Promise.all([
+        fetch(`${BASE_URL}/global`, { next: { revalidate: 120 } }),
+        fetch('https://api.alternative.me/fng/', { next: { revalidate: 300 } }).catch(() => null),
+      ]);
+
+      if (!globalRes.ok) throw new Error('Failed to fetch global data');
+      const globalData = await globalRes.json();
+
+      let fearGreedIndex = 50;
+      let fearGreedLabel = 'Neutral';
+      if (fgRes && fgRes.ok) {
+        try {
+          const fgData = await fgRes.json();
+          fearGreedIndex = parseInt(fgData.data[0].value);
+          fearGreedLabel = fgData.data[0].value_classification;
+        } catch {
+          // optional
+        }
+      }
+
+      return NextResponse.json({
+        totalMarketCap: globalData.data.total_market_cap.usd,
+        totalVolume: globalData.data.total_volume.usd,
+        btcDominance: globalData.data.market_cap_percentage.btc,
+        marketCapChange24h: globalData.data.market_cap_change_percentage_24h_usd,
+        fearGreedIndex,
+        fearGreedLabel,
+      });
+    }
+
+    let url = `${BASE_URL}/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=50&page=${page}&sparkline=true&price_change_percentage=7d`;
+    if (ids) {
+      url = `${BASE_URL}/coins/markets?vs_currency=usd&ids=${ids}&sparkline=true&price_change_percentage=7d`;
+    }
+
+    const res = await fetch(url, { next: { revalidate: 60 } });
+    if (!res.ok) throw new Error('CoinGecko API error');
+    const data = await res.json();
+
+    return NextResponse.json(data);
+  } catch (error) {
+    console.error('Prices API error:', error);
+    return NextResponse.json({ error: 'Failed to fetch prices' }, { status: 500 });
+  }
+}
+'@ | Set-Content -Path "src\app\api\prices\route.ts" -Encoding UTF8
+
+@'
+export const dynamic = 'force-dynamic';
+
+import { NextResponse } from 'next/server';
+
+const BASE_URL = 'https://api.coingecko.com/api/v3';
+
+function calculateRSI(prices: number[], period: number = 14): number {
+  if (prices.length < period + 1) return 50;
+  
+  let gains = 0;
+  let losses = 0;
+  
+  for (let i = prices.length - period; i < prices.length; i++) {
+    const change = prices[i] - prices[i - 1];
+    if (change > 0) gains += change;
+    else losses += Math.abs(change);
+  }
+  
+  const avgGain = gains / period;
+  const avgLoss = losses / period;
+  
+  if (avgLoss === 0) return 100;
+  const rs = avgGain / avgLoss;
+  return 100 - (100 / (1 + rs));
+}
+
+function generateSignal(coin: {
+  id: string;
+  symbol: string;
+  name: string;
+  image: string;
+  current_price: number;
+  price_change_percentage_24h: number;
+  price_change_percentage_7d_in_currency?: number;
+  total_volume: number;
+  market_cap: number;
+  sparkline_in_7d?: { price: number[] };
+}) {
+  const prices = coin.sparkline_in_7d?.price || [];
+  const rsi = calculateRSI(prices);
+  const change24h = coin.price_change_percentage_24h || 0;
+  const change7d = coin.price_change_percentage_7d_in_currency || 0;
+  
+  // Volume to market cap ratio (higher = more activity)
+  const volumeRatio = coin.market_cap > 0 ? (coin.total_volume / coin.market_cap) * 100 : 0;
+  
+  let score = 50; // neutral baseline
+  let reasons: string[] = [];
+  
+  // RSI signals
+  if (rsi <= 30) { score += 25; reasons.push('RSI oversold'); }
+  else if (rsi <= 40) { score += 10; reasons.push('RSI approaching oversold'); }
+  else if (rsi >= 70) { score -= 25; reasons.push('RSI overbought'); }
+  else if (rsi >= 60) { score -= 10; reasons.push('RSI approaching overbought'); }
+  
+  // Price momentum
+  if (change24h > 5) { score += 10; reasons.push('Strong 24h momentum'); }
+  else if (change24h > 2) { score += 5; reasons.push('Positive 24h trend'); }
+  else if (change24h < -5) { score -= 10; reasons.push('Sharp 24h decline'); }
+  else if (change24h < -2) { score -= 5; reasons.push('Negative 24h trend'); }
+  
+  // 7-day trend
+  if (change7d > 10) { score += 10; reasons.push('Strong weekly uptrend'); }
+  else if (change7d > 3) { score += 5; reasons.push('Positive weekly trend'); }
+  else if (change7d < -10) { score -= 10; reasons.push('Sharp weekly decline'); }
+  else if (change7d < -3) { score -= 5; reasons.push('Negative weekly trend'); }
+  
+  // Volume analysis
+  if (volumeRatio > 15) { score += 5; reasons.push('High trading volume'); }
+  else if (volumeRatio < 3) { score -= 5; reasons.push('Low trading volume'); }
+  
+  // Clamp score
+  score = Math.max(0, Math.min(100, score));
+  
+  let signal: 'BUY' | 'SELL' | 'HOLD' = 'HOLD';
+  if (score >= 65) signal = 'BUY';
+  else if (score <= 35) signal = 'SELL';
+  
+  return {
+    coinId: coin.id,
+    symbol: coin.symbol,
+    name: coin.name,
+    image: coin.image,
+    signal,
+    strength: score,
+    rsi,
+    priceChange24h: change24h,
+    priceChange7d: change7d,
+    volumeChange: volumeRatio,
+    reason: reasons.join('. ') || 'No strong signals detected',
+    timestamp: Date.now(),
+  };
+}
+
+export async function GET() {
+  try {
+    const res = await fetch(
+      `${BASE_URL}/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=20&page=1&sparkline=true&price_change_percentage=7d`,
+      { next: { revalidate: 120 } }
+    );
+    
+    if (!res.ok) throw new Error('CoinGecko API error');
+    const coins = await res.json();
+    
+    const signals = coins.map(generateSignal);
+    
+    // Sort: BUY first, then SELL, then HOLD, by strength
+    signals.sort((a: { signal: string; strength: number }, b: { signal: string; strength: number }) => {
+      const order = { BUY: 0, SELL: 1, HOLD: 2 };
+      const orderA = order[a.signal as keyof typeof order] ?? 2;
+      const orderB = order[b.signal as keyof typeof order] ?? 2;
+      if (orderA !== orderB) return orderA - orderB;
+      return b.strength - a.strength;
+    });
+    
+    return NextResponse.json({ signals });
+  } catch (error) {
+    console.error('Signals API error:', error);
+    return NextResponse.json({ signals: [] });
+  }
+}
+'@ | Set-Content -Path "src\app\api\signals\route.ts" -Encoding UTF8
+
+@'
+'use client';
+
+import NewsFeed from '@/components/NewsFeed';
+
+export default function NewsPage() {
+  return (
+    <div>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold mb-2">Crypto News</h1>
+        <p className="text-gray-400 text-sm">
+          Live news aggregated from r/cryptocurrency, r/bitcoin, r/ethereum, and r/CryptoMarkets.
+          Sentiment analysis powered by keyword detection.
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <div className="bg-crypto-card border border-crypto-border rounded-xl p-4 text-center">
+          <p className="text-2xl mb-1">🟢</p>
+          <p className="text-xs text-gray-500 uppercase">Bullish</p>
+          <p className="text-sm text-gray-400 mt-1">Positive sentiment keywords detected</p>
+        </div>
+        <div className="bg-crypto-card border border-crypto-border rounded-xl p-4 text-center">
+          <p className="text-2xl mb-1">⚪</p>
+          <p className="text-xs text-gray-500 uppercase">Neutral</p>
+          <p className="text-sm text-gray-400 mt-1">No strong sentiment detected</p>
+        </div>
+        <div className="bg-crypto-card border border-crypto-border rounded-xl p-4 text-center">
+          <p className="text-2xl mb-1">🔴</p>
+          <p className="text-xs text-gray-500 uppercase">Bearish</p>
+          <p className="text-sm text-gray-400 mt-1">Negative sentiment keywords detected</p>
+        </div>
+      </div>
+
+      <NewsFeed limit={30} />
+    </div>
+  );
+}
+'@ | Set-Content -Path "src\app\news\page.tsx" -Encoding UTF8
+
+@'
+'use client';
+
+import { useEffect, useState } from 'react';
+import { CryptoPrice, Portfolio } from '@/types';
+import { getPortfolio, resetPortfolio, formatCurrency, formatPercent, calculatePnL } from '@/lib/trading';
+import PortfolioTable from '@/components/PortfolioTable';
+
+export default function PortfolioPage() {
+  const [portfolio, setPortfolio] = useState<Portfolio>(getPortfolio());
+  const [prices, setPrices] = useState<CryptoPrice[]>([]);
+  const [showReset, setShowReset] = useState(false);
+  const [customCash, setCustomCash] = useState('10000');
+
+  useEffect(() => {
+    fetch('/api/prices')
+      .then(r => r.json())
+      .then(data => { if (Array.isArray(data)) setPrices(data); })
+      .catch(() => {});
+
+    const interval = setInterval(() => {
+      fetch('/api/prices')
+        .then(r => r.json())
+        .then(data => { if (Array.isArray(data)) setPrices(data); })
+        .catch(() => {});
+    }, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const { totalValue, totalInvested, totalPnL, totalPnLPercent } = calculatePnL(portfolio.holdings, prices);
+  const totalPortfolioValue = portfolio.cash + totalValue;
+  const overallPnL = totalPortfolioValue - portfolio.startingCash;
+  const overallPnLPercent = portfolio.startingCash > 0 ? (overallPnL / portfolio.startingCash) * 100 : 0;
+
+  const handleReset = () => {
+    const cash = parseFloat(customCash) || 10000;
+    const updated = resetPortfolio(cash);
+    setPortfolio(updated);
+    setShowReset(false);
+  };
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold">Portfolio</h1>
+        <button
+          onClick={() => setShowReset(!showReset)}
+          className="px-4 py-2 bg-crypto-border rounded-lg text-sm hover:bg-gray-600 transition-colors"
+        >
+          {showReset ? 'Cancel' : '🔄 Reset Portfolio'}
+        </button>
+      </div>
+
+      {/* Reset modal */}
+      {showReset && (
+        <div className="bg-crypto-card border border-crypto-yellow/30 rounded-xl p-6 mb-6 animate-slide-up">
+          <h3 className="font-bold text-crypto-yellow mb-3">⚠️ Reset Portfolio</h3>
+          <p className="text-sm text-gray-400 mb-4">This will delete all holdings and trade history. Choose your starting balance:</p>
+          <div className="flex gap-3 mb-4">
+            {[1000, 5000, 10000, 50000, 100000].map(amt => (
+              <button
+                key={amt}
+                onClick={() => setCustomCash(amt.toString())}
+                className={`px-3 py-1.5 rounded text-xs font-medium transition-colors ${
+                  customCash === amt.toString() ? 'bg-crypto-accent text-white' : 'bg-crypto-border text-gray-400 hover:text-white'
+                }`}
+              >
+                {formatCurrency(amt)}
+              </button>
+            ))}
+          </div>
+          <div className="flex gap-3 items-center">
+            <input
+              type="number"
+              value={customCash}
+              onChange={e => setCustomCash(e.target.value)}
+              className="bg-crypto-dark border border-crypto-border rounded-lg px-4 py-2 text-white w-40 focus:border-crypto-accent focus:outline-none"
+              min="1"
+            />
+            <button
+              onClick={handleReset}
+              className="px-6 py-2 bg-crypto-yellow text-black font-bold rounded-lg hover:bg-crypto-yellow/80 transition-colors"
+            >
+              Reset with {formatCurrency(parseFloat(customCash) || 10000)}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Stats */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+        <div className="bg-crypto-card border border-crypto-border rounded-xl p-5">
+          <p className="text-xs text-gray-500 uppercase tracking-wider">Total Value</p>
+          <p className="text-xl font-bold mt-1">{formatCurrency(totalPortfolioValue)}</p>
+        </div>
+        <div className="bg-crypto-card border border-crypto-border rounded-xl p-5">
+          <p className="text-xs text-gray-500 uppercase tracking-wider">Cash</p>
+          <p className="text-xl font-bold mt-1">{formatCurrency(portfolio.cash)}</p>
+        </div>
+        <div className="bg-crypto-card border border-crypto-border rounded-xl p-5">
+          <p className="text-xs text-gray-500 uppercase tracking-wider">Invested</p>
+          <p className="text-xl font-bold mt-1">{formatCurrency(totalInvested)}</p>
+        </div>
+        <div className="bg-crypto-card border border-crypto-border rounded-xl p-5">
+          <p className="text-xs text-gray-500 uppercase tracking-wider">Holdings P&L</p>
+          <p className={`text-xl font-bold mt-1 ${totalPnL >= 0 ? 'text-crypto-green' : 'text-crypto-red'}`}>
+            {formatCurrency(totalPnL)}
+          </p>
+          <p className={`text-xs mt-1 ${totalPnL >= 0 ? 'text-crypto-green' : 'text-crypto-red'}`}>
+            {formatPercent(totalPnLPercent)}
+          </p>
+        </div>
+        <div className={`bg-crypto-card border rounded-xl p-5 ${overallPnL >= 0 ? 'border-crypto-green/30' : 'border-crypto-red/30'}`}>
+          <p className="text-xs text-gray-500 uppercase tracking-wider">Overall P&L</p>
+          <p className={`text-xl font-bold mt-1 ${overallPnL >= 0 ? 'text-crypto-green' : 'text-crypto-red'}`}>
+            {formatCurrency(overallPnL)}
+          </p>
+          <p className={`text-xs mt-1 ${overallPnL >= 0 ? 'text-crypto-green' : 'text-crypto-red'}`}>
+            {formatPercent(overallPnLPercent)}
+          </p>
+        </div>
+      </div>
+
+      {/* Holdings Table */}
+      <h2 className="text-xl font-bold mb-4">Holdings</h2>
+      <PortfolioTable holdings={portfolio.holdings} prices={prices} />
+
+      {/* Trade History */}
+      <h2 className="text-xl font-bold mt-8 mb-4">Trade History</h2>
+      {portfolio.trades.length === 0 ? (
+        <div className="bg-crypto-card border border-crypto-border rounded-xl p-8 text-center">
+          <p className="text-4xl mb-3">📜</p>
+          <p className="text-gray-400">No trades yet. Head to the Trade page to get started!</p>
+        </div>
+      ) : (
+        <div className="bg-crypto-card border border-crypto-border rounded-xl overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-crypto-border">
+                  <th className="text-left text-xs text-gray-500 uppercase tracking-wider px-6 py-4">Date</th>
+                  <th className="text-left text-xs text-gray-500 uppercase tracking-wider px-6 py-4">Type</th>
+                  <th className="text-left text-xs text-gray-500 uppercase tracking-wider px-6 py-4">Coin</th>
+                  <th className="text-right text-xs text-gray-500 uppercase tracking-wider px-6 py-4">Amount</th>
+                  <th className="text-right text-xs text-gray-500 uppercase tracking-wider px-6 py-4">Price</th>
+                  <th className="text-right text-xs text-gray-500 uppercase tracking-wider px-6 py-4">Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                {portfolio.trades.slice(0, 50).map(trade => (
+                  <tr key={trade.id} className="border-b border-crypto-border/50 hover:bg-white/[0.02]">
+                    <td className="px-6 py-3 text-xs text-gray-400">
+                      {new Date(trade.timestamp).toLocaleString()}
+                    </td>
+                    <td className="px-6 py-3">
+                      <span className={`text-xs font-bold px-2 py-1 rounded ${
+                        trade.type === 'buy' ? 'bg-crypto-green/20 text-crypto-green' : 'bg-crypto-red/20 text-crypto-red'
+                      }`}>
+                        {trade.type.toUpperCase()}
+                      </span>
+                    </td>
+                    <td className="px-6 py-3 text-sm font-medium">{trade.name}</td>
+                    <td className="text-right px-6 py-3 text-sm">{trade.amount.toFixed(6)}</td>
+                    <td className="text-right px-6 py-3 text-sm text-gray-400">{formatCurrency(trade.price)}</td>
+                    <td className="text-right px-6 py-3 text-sm font-medium">{formatCurrency(trade.total)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+'@ | Set-Content -Path "src\app\portfolio\page.tsx" -Encoding UTF8
+
+@'
+'use client';
+
+import { useEffect, useState } from 'react';
+import { Signal } from '@/types';
+import SignalCard from '@/components/SignalCard';
+
+export default function SignalsPage() {
+  const [signals, setSignals] = useState<Signal[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState<'all' | 'BUY' | 'SELL' | 'HOLD'>('all');
+
+  useEffect(() => {
+    fetch('/api/signals')
+      .then(r => r.json())
+      .then(data => { setSignals(data.signals || []); setLoading(false); })
+      .catch(() => setLoading(false));
+  }, []);
+
+  const filtered = filter === 'all' ? signals : signals.filter(s => s.signal === filter);
+  const buyCount = signals.filter(s => s.signal === 'BUY').length;
+  const sellCount = signals.filter(s => s.signal === 'SELL').length;
+  const holdCount = signals.filter(s => s.signal === 'HOLD').length;
+
+  return (
+    <div>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold mb-2">Trading Signals</h1>
+        <p className="text-gray-400 text-sm">
+          AI-powered signals based on RSI, price momentum, volume analysis, and trend detection.
+          Updated every 2 minutes from live market data.
+        </p>
+      </div>
+
+      {/* Signal Summary */}
+      <div className="grid grid-cols-3 gap-4 mb-6">
+        <div className="bg-crypto-card border border-crypto-green/30 rounded-xl p-4 text-center">
+          <p className="text-3xl font-bold text-crypto-green">{buyCount}</p>
+          <p className="text-xs text-gray-500 uppercase mt-1">Buy Signals</p>
+        </div>
+        <div className="bg-crypto-card border border-crypto-yellow/30 rounded-xl p-4 text-center">
+          <p className="text-3xl font-bold text-crypto-yellow">{holdCount}</p>
+          <p className="text-xs text-gray-500 uppercase mt-1">Hold Signals</p>
+        </div>
+        <div className="bg-crypto-card border border-crypto-red/30 rounded-xl p-4 text-center">
+          <p className="text-3xl font-bold text-crypto-red">{sellCount}</p>
+          <p className="text-xs text-gray-500 uppercase mt-1">Sell Signals</p>
+        </div>
+      </div>
+
+      {/* Filter */}
+      <div className="flex gap-2 mb-6">
+        {(['all', 'BUY', 'SELL', 'HOLD'] as const).map(f => (
+          <button
+            key={f}
+            onClick={() => setFilter(f)}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+              filter === f
+                ? f === 'BUY' ? 'bg-crypto-green text-white'
+                : f === 'SELL' ? 'bg-crypto-red text-white'
+                : f === 'HOLD' ? 'bg-crypto-yellow text-black'
+                : 'bg-crypto-accent text-white'
+                : 'bg-crypto-border text-gray-400 hover:text-white'
+            }`}
+          >
+            {f === 'all' ? 'All' : f} {f !== 'all' && `(${signals.filter(s => s.signal === f).length})`}
+          </button>
+        ))}
+      </div>
+
+      {loading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {[...Array(6)].map((_, i) => (
+            <div key={i} className="bg-crypto-card border border-crypto-border rounded-xl p-6 animate-pulse">
+              <div className="h-10 bg-gray-700 rounded w-1/2 mb-4" />
+              <div className="h-4 bg-gray-700 rounded w-3/4 mb-2" />
+              <div className="h-4 bg-gray-700 rounded w-1/2" />
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {filtered.map(signal => (
+            <SignalCard key={signal.coinId} signal={signal} />
+          ))}
+        </div>
+      )}
+
+      {/* Disclaimer */}
+      <div className="mt-8 bg-crypto-card border border-crypto-border rounded-xl p-4">
+        <p className="text-xs text-gray-500">
+          ⚠️ <strong>Disclaimer:</strong> These signals are generated by algorithmic analysis of market data and are for
+          educational/paper trading purposes only. They do not constitute financial advice. Always do your own research
+          before making real trading decisions.
+        </p>
+      </div>
+    </div>
+  );
+}
+'@ | Set-Content -Path "src\app\signals\page.tsx" -Encoding UTF8
+
+@'
+'use client';
+
+import { useEffect, useState, useCallback, Suspense } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { CryptoPrice, Portfolio } from '@/types';
+import { getPortfolio, formatCurrency, formatPercent } from '@/lib/trading';
+import TradeForm from '@/components/TradeForm';
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+
+function TradeContent() {
+  const searchParams = useSearchParams();
+  const coinParam = searchParams.get('coin') || 'bitcoin';
+
+  const [prices, setPrices] = useState<CryptoPrice[]>([]);
+  const [selectedCoin, setSelectedCoin] = useState<CryptoPrice | null>(null);
+  const [portfolio, setPortfolio] = useState<Portfolio>(getPortfolio());
+  const [search, setSearch] = useState('');
+  const [chartData, setChartData] = useState<Array<{ time: string; price: number }>>([]);
+  const [chartDays, setChartDays] = useState(7);
+  const [loading, setLoading] = useState(true);
+
+  const loadPrices = useCallback(async () => {
+    try {
+      const res = await fetch('/api/prices');
+      const data = await res.json();
+      if (Array.isArray(data)) {
+        setPrices(data);
+        const coin = data.find((c: CryptoPrice) => c.id === coinParam) || data[0];
+        if (coin && !selectedCoin) setSelectedCoin(coin);
+      }
+    } catch {} finally { setLoading(false); }
+  }, [coinParam, selectedCoin]);
+
+  useEffect(() => { loadPrices(); }, [loadPrices]);
+
+  // Auto-refresh prices every 30 seconds
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch('/api/prices');
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          setPrices(data);
+          if (selectedCoin) {
+            const updated = data.find((c: CryptoPrice) => c.id === selectedCoin.id);
+            if (updated) setSelectedCoin(updated);
+          }
+        }
+      } catch {}
+    }, 30000);
+    return () => clearInterval(interval);
+  }, [selectedCoin]);
+
+  // Load chart data
+  useEffect(() => {
+    if (!selectedCoin) return;
+    fetch(`https://api.coingecko.com/api/v3/coins/${selectedCoin.id}/market_chart?vs_currency=usd&days=${chartDays}`)
+      .then(r => r.json())
+      .then(data => {
+        if (data.prices) {
+          const points = data.prices.map((p: number[]) => ({
+            time: new Date(p[0]).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+            price: p[1],
+          }));
+          // Sample to ~50 points
+          const step = Math.max(1, Math.floor(points.length / 50));
+          setChartData(points.filter((_: unknown, i: number) => i % step === 0));
+        }
+      })
+      .catch(() => {});
+  }, [selectedCoin, chartDays]);
+
+  const filteredCoins = prices.filter(c =>
+    c.name.toLowerCase().includes(search.toLowerCase()) ||
+    c.symbol.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const handleTrade = (updated: Portfolio) => {
+    setPortfolio(updated);
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center">
+          <div className="text-4xl mb-4 animate-pulse-slow">💱</div>
+          <p className="text-gray-400">Loading market data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <h1 className="text-2xl font-bold mb-6">Trade</h1>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Coin selector */}
+        <div className="lg:col-span-1">
+          <input
+            type="text"
+            placeholder="Search coins..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="w-full bg-crypto-card border border-crypto-border rounded-xl px-4 py-3 text-white placeholder-gray-600 focus:border-crypto-accent focus:outline-none mb-4"
+          />
+          <div className="bg-crypto-card border border-crypto-border rounded-xl max-h-[500px] overflow-y-auto">
+            {filteredCoins.map(coin => (
+              <button
+                key={coin.id}
+                onClick={() => setSelectedCoin(coin)}
+                className={`w-full flex items-center justify-between p-3 hover:bg-white/5 transition-colors border-b border-crypto-border/50 last:border-0 ${
+                  selectedCoin?.id === coin.id ? 'bg-crypto-accent/10 border-l-2 border-l-crypto-accent' : ''
+                }`}
+              >
+                <div className="flex items-center space-x-3">
+                  <img src={coin.image} alt={coin.name} className="w-6 h-6 rounded-full" />
+                  <div className="text-left">
+                    <p className="text-sm font-medium">{coin.symbol.toUpperCase()}</p>
+                    <p className="text-xs text-gray-500">{coin.name}</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm">{formatCurrency(coin.current_price)}</p>
+                  <p className={`text-xs ${coin.price_change_percentage_24h >= 0 ? 'text-crypto-green' : 'text-crypto-red'}`}>
+                    {formatPercent(coin.price_change_percentage_24h)}
+                  </p>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Chart + Trade */}
+        <div className="lg:col-span-2 space-y-6">
+          {selectedCoin && (
+            <>
+              {/* Coin header */}
+              <div className="bg-crypto-card border border-crypto-border rounded-xl p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center space-x-4">
+                    <img src={selectedCoin.image} alt={selectedCoin.name} className="w-12 h-12 rounded-full" />
+                    <div>
+                      <h2 className="text-xl font-bold">{selectedCoin.name}</h2>
+                      <p className="text-gray-500 uppercase">{selectedCoin.symbol}</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-2xl font-bold">{formatCurrency(selectedCoin.current_price)}</p>
+                    <p className={`text-sm font-medium ${selectedCoin.price_change_percentage_24h >= 0 ? 'text-crypto-green' : 'text-crypto-red'}`}>
+                      {formatPercent(selectedCoin.price_change_percentage_24h)} (24h)
+                    </p>
+                  </div>
+                </div>
+
+                {/* Stats */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                  <div>
+                    <p className="text-xs text-gray-500">24h High</p>
+                    <p className="text-sm font-medium">{formatCurrency(selectedCoin.high_24h)}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">24h Low</p>
+                    <p className="text-sm font-medium">{formatCurrency(selectedCoin.low_24h)}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Market Cap</p>
+                    <p className="text-sm font-medium">${(selectedCoin.market_cap / 1e9).toFixed(2)}B</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-gray-500">Volume (24h)</p>
+                    <p className="text-sm font-medium">${(selectedCoin.total_volume / 1e9).toFixed(2)}B</p>
+                  </div>
+                </div>
+
+                {/* Chart timeframe */}
+                <div className="flex gap-2 mb-4">
+                  {[1, 7, 30, 90, 365].map(d => (
+                    <button
+                      key={d}
+                      onClick={() => setChartDays(d)}
+                      className={`px-3 py-1 rounded text-xs font-medium transition-colors ${
+                        chartDays === d ? 'bg-crypto-accent text-white' : 'bg-crypto-border text-gray-400 hover:text-white'
+                      }`}
+                    >
+                      {d === 1 ? '24H' : d === 7 ? '7D' : d === 30 ? '1M' : d === 90 ? '3M' : '1Y'}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Chart */}
+                {chartData.length > 0 && (
+                  <div className="h-64">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={chartData}>
+                        <XAxis dataKey="time" tick={{ fill: '#6b7280', fontSize: 11 }} tickLine={false} axisLine={false} />
+                        <YAxis
+                          tick={{ fill: '#6b7280', fontSize: 11 }}
+                          tickLine={false}
+                          axisLine={false}
+                          domain={['auto', 'auto']}
+                          tickFormatter={(v: number) => v >= 1000 ? `$${(v/1000).toFixed(0)}k` : `$${v.toFixed(2)}`}
+                        />
+                        <Tooltip
+                          contentStyle={{ background: '#111827', border: '1px solid #1f2937', borderRadius: '8px' }}
+                          labelStyle={{ color: '#9ca3af' }}
+                          formatter={(value: number) => [formatCurrency(value), 'Price']}
+                        />
+                        <Line
+                          type="monotone"
+                          dataKey="price"
+                          stroke={selectedCoin.price_change_percentage_24h >= 0 ? '#10b981' : '#ef4444'}
+                          strokeWidth={2}
+                          dot={false}
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                )}
+              </div>
+
+              {/* Trade Form */}
+              <TradeForm coin={selectedCoin} portfolio={portfolio} onTrade={handleTrade} />
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function TradePage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-[60vh]"><div className="text-4xl animate-pulse-slow">💱</div></div>}>
+      <TradeContent />
+    </Suspense>
+  );
+}
+'@ | Set-Content -Path "src\app\trade\page.tsx" -Encoding UTF8
+
+@'
+'use client';
+
+import { useEffect, useState } from 'react';
+import { MarketStats } from '@/types';
+import { formatNumber } from '@/lib/trading';
+
+export default function MarketOverview() {
+  const [stats, setStats] = useState<MarketStats | null>(null);
+
+  useEffect(() => {
+    fetch('/api/prices?type=global')
+      .then(r => r.json())
+      .then(setStats)
+      .catch(() => {});
+  }, []);
+
+  if (!stats) {
+    return (
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+        {[...Array(5)].map((_, i) => (
+          <div key={i} className="bg-crypto-card border border-crypto-border rounded-xl p-4 animate-pulse">
+            <div className="h-4 bg-gray-700 rounded w-20 mb-2" />
+            <div className="h-6 bg-gray-700 rounded w-28" />
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  const getFearGreedColor = (value: number) => {
+    if (value <= 25) return 'text-crypto-red';
+    if (value <= 45) return 'text-orange-400';
+    if (value <= 55) return 'text-crypto-yellow';
+    if (value <= 75) return 'text-lime-400';
+    return 'text-crypto-green';
+  };
+
+  return (
+    <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+      <div className="bg-crypto-card border border-crypto-border rounded-xl p-4">
+        <p className="text-xs text-gray-500 uppercase tracking-wider">Market Cap</p>
+        <p className="text-lg font-bold mt-1">{formatNumber(stats.totalMarketCap)}</p>
+        <p className={`text-xs mt-1 ${stats.marketCapChange24h >= 0 ? 'text-crypto-green' : 'text-crypto-red'}`}>
+          {stats.marketCapChange24h >= 0 ? '▲' : '▼'} {Math.abs(stats.marketCapChange24h).toFixed(2)}%
+        </p>
+      </div>
+      <div className="bg-crypto-card border border-crypto-border rounded-xl p-4">
+        <p className="text-xs text-gray-500 uppercase tracking-wider">24h Volume</p>
+        <p className="text-lg font-bold mt-1">{formatNumber(stats.totalVolume)}</p>
+      </div>
+      <div className="bg-crypto-card border border-crypto-border rounded-xl p-4">
+        <p className="text-xs text-gray-500 uppercase tracking-wider">BTC Dominance</p>
+        <p className="text-lg font-bold mt-1">{stats.btcDominance.toFixed(1)}%</p>
+      </div>
+      <div className="bg-crypto-card border border-crypto-border rounded-xl p-4">
+        <p className="text-xs text-gray-500 uppercase tracking-wider">Fear &amp; Greed</p>
+        <p className={`text-lg font-bold mt-1 ${getFearGreedColor(stats.fearGreedIndex)}`}>
+          {stats.fearGreedIndex}
+        </p>
+        <p className={`text-xs mt-1 ${getFearGreedColor(stats.fearGreedIndex)}`}>
+          {stats.fearGreedLabel}
+        </p>
+      </div>
+      <div className="bg-crypto-card border border-crypto-border rounded-xl p-4">
+        <p className="text-xs text-gray-500 uppercase tracking-wider">Market Trend</p>
+        <p className={`text-lg font-bold mt-1 ${stats.marketCapChange24h >= 0 ? 'text-crypto-green' : 'text-crypto-red'}`}>
+          {stats.marketCapChange24h >= 0 ? '🟢 Bullish' : '🔴 Bearish'}
+        </p>
+      </div>
+    </div>
+  );
+}
+'@ | Set-Content -Path "src\components\MarketOverview.tsx" -Encoding UTF8
+
+@'
+'use client';
+
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+
+const links = [
+  { href: '/', label: 'Dashboard', icon: '📊' },
+  { href: '/trade', label: 'Trade', icon: '💱' },
+  { href: '/portfolio', label: 'Portfolio', icon: '💼' },
+  { href: '/signals', label: 'Signals', icon: '📡' },
+  { href: '/news', label: 'News', icon: '📰' },
+];
+
+export default function Navbar() {
+  const pathname = usePathname();
+
+  return (
+    <nav className="bg-crypto-card border-b border-crypto-border sticky top-0 z-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16">
+          <Link href="/" className="flex items-center space-x-2">
+            <span className="text-2xl">🔧</span>
+            <span className="text-xl font-bold bg-gradient-to-r from-crypto-accent to-crypto-purple bg-clip-text text-transparent">
+              CryptoToolbox
+            </span>
+          </Link>
+          <div className="hidden md:flex items-center space-x-1">
+            {links.map(link => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  pathname === link.href
+                    ? 'bg-crypto-accent/20 text-crypto-accent'
+                    : 'text-gray-400 hover:text-white hover:bg-white/5'
+                }`}
+              >
+                <span className="mr-1.5">{link.icon}</span>
+                {link.label}
+              </Link>
+            ))}
+          </div>
+          {/* Mobile menu */}
+          <div className="md:hidden flex items-center space-x-1 overflow-x-auto">
+            {links.map(link => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={`p-2 rounded-lg text-xs whitespace-nowrap ${
+                  pathname === link.href
+                    ? 'bg-crypto-accent/20 text-crypto-accent'
+                    : 'text-gray-400'
+                }`}
+              >
+                {link.icon}
+              </Link>
+            ))}
+          </div>
+        </div>
+      </div>
+    </nav>
+  );
+}
+'@ | Set-Content -Path "src\components\Navbar.tsx" -Encoding UTF8
+
+@'
+'use client';
+
+import { useEffect, useState } from 'react';
+import { NewsItem } from '@/types';
+
+export default function NewsFeed({ limit = 10 }: { limit?: number }) {
+  const [news, setNews] = useState<NewsItem[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch(`/api/news?limit=${limit}`)
+      .then(r => r.json())
+      .then(data => { setNews(data.articles || []); setLoading(false); })
+      .catch(() => setLoading(false));
+  }, [limit]);
+
+  if (loading) {
+    return (
+      <div className="space-y-4">
+        {[...Array(3)].map((_, i) => (
+          <div key={i} className="bg-crypto-card border border-crypto-border rounded-xl p-4 animate-pulse">
+            <div className="h-4 bg-gray-700 rounded w-3/4 mb-2" />
+            <div className="h-3 bg-gray-700 rounded w-1/4" />
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (news.length === 0) {
+    return (
+      <div className="bg-crypto-card border border-crypto-border rounded-xl p-8 text-center">
+        <p className="text-4xl mb-3">📰</p>
+        <p className="text-gray-400">No news available right now. Check back soon!</p>
+      </div>
+    );
+  }
+
+  const getSentimentBadge = (sentiment?: string) => {
+    switch (sentiment) {
+      case 'positive': return <span className="text-xs bg-crypto-green/20 text-crypto-green px-2 py-0.5 rounded-full">Bullish</span>;
+      case 'negative': return <span className="text-xs bg-crypto-red/20 text-crypto-red px-2 py-0.5 rounded-full">Bearish</span>;
+      default: return <span className="text-xs bg-gray-700 text-gray-400 px-2 py-0.5 rounded-full">Neutral</span>;
+    }
+  };
+
+  return (
+    <div className="space-y-3">
+      {news.map((item) => (
+        <a
+          key={item.id}
+          href={item.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block bg-crypto-card border border-crypto-border rounded-xl p-4 hover:border-crypto-accent/50 transition-all"
+        >
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex-1">
+              <h3 className="font-medium text-sm mb-2 line-clamp-2">{item.title}</h3>
+              <div className="flex items-center gap-3 text-xs text-gray-500">
+                <span>{item.source}</span>
+                <span>{new Date(item.created_at).toLocaleDateString()}</span>
+                {getSentimentBadge(item.sentiment)}
+              </div>
+            </div>
+            {item.thumbnail && (
+              <img src={item.thumbnail} alt="" className="w-16 h-16 rounded-lg object-cover flex-shrink-0" />
+            )}
+          </div>
+        </a>
+      ))}
+    </div>
+  );
+}
+'@ | Set-Content -Path "src\components\NewsFeed.tsx" -Encoding UTF8
+
+@'
+'use client';
+
+import { Holding, CryptoPrice } from '@/types';
+import { formatCurrency, formatPercent } from '@/lib/trading';
+
+interface PortfolioTableProps {
+  holdings: Holding[];
+  prices: CryptoPrice[];
+}
+
+export default function PortfolioTable({ holdings, prices }: PortfolioTableProps) {
+  if (holdings.length === 0) {
+    return (
+      <div className="bg-crypto-card border border-crypto-border rounded-xl p-8 text-center">
+        <p className="text-4xl mb-3">📭</p>
+        <p className="text-gray-400">No holdings yet. Start trading to build your portfolio!</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-crypto-card border border-crypto-border rounded-xl overflow-hidden">
+      <div className="overflow-x-auto">
+        <table className="w-full">
+          <thead>
+            <tr className="border-b border-crypto-border">
+              <th className="text-left text-xs text-gray-500 uppercase tracking-wider px-6 py-4">Asset</th>
+              <th className="text-right text-xs text-gray-500 uppercase tracking-wider px-6 py-4">Holdings</th>
+              <th className="text-right text-xs text-gray-500 uppercase tracking-wider px-6 py-4">Avg Buy</th>
+              <th className="text-right text-xs text-gray-500 uppercase tracking-wider px-6 py-4">Current</th>
+              <th className="text-right text-xs text-gray-500 uppercase tracking-wider px-6 py-4">Value</th>
+              <th className="text-right text-xs text-gray-500 uppercase tracking-wider px-6 py-4">P&L</th>
+            </tr>
+          </thead>
+          <tbody>
+            {holdings.map(holding => {
+              const price = prices.find(p => p.id === holding.coinId);
+              const currentPrice = price?.current_price || 0;
+              const currentValue = holding.amount * currentPrice;
+              const pnl = currentValue - holding.totalInvested;
+              const pnlPercent = holding.totalInvested > 0 ? (pnl / holding.totalInvested) * 100 : 0;
+              const isUp = pnl >= 0;
+
+              return (
+                <tr key={holding.coinId} className="border-b border-crypto-border/50 hover:bg-white/[0.02] transition-colors">
+                  <td className="px-6 py-4">
+                    <div className="flex items-center space-x-3">
+                      <img src={holding.image} alt={holding.name} className="w-8 h-8 rounded-full" />
+                      <div>
+                        <p className="font-medium text-sm">{holding.name}</p>
+                        <p className="text-xs text-gray-500 uppercase">{holding.symbol}</p>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="text-right px-6 py-4 text-sm">
+                    {holding.amount < 0.001 ? holding.amount.toFixed(8) : holding.amount.toFixed(4)} {holding.symbol.toUpperCase()}
+                  </td>
+                  <td className="text-right px-6 py-4 text-sm text-gray-400">
+                    {formatCurrency(holding.avgBuyPrice)}
+                  </td>
+                  <td className="text-right px-6 py-4 text-sm">
+                    {formatCurrency(currentPrice)}
+                  </td>
+                  <td className="text-right px-6 py-4 text-sm font-medium">
+                    {formatCurrency(currentValue)}
+                  </td>
+                  <td className={`text-right px-6 py-4 text-sm font-bold ${isUp ? 'text-crypto-green' : 'text-crypto-red'}`}>
+                    <div>{formatCurrency(pnl)}</div>
+                    <div className="text-xs">{formatPercent(pnlPercent)}</div>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+'@ | Set-Content -Path "src\components\PortfolioTable.tsx" -Encoding UTF8
+
+@'
+'use client';
+
+import Link from 'next/link';
+import { CryptoPrice } from '@/types';
+import { formatCurrency, formatPercent } from '@/lib/trading';
+import SparklineChart from './SparklineChart';
+
+export default function PriceCard({ coin }: { coin: CryptoPrice }) {
+  const isUp = coin.price_change_percentage_24h >= 0;
+
+  return (
+    <Link href={`/trade?coin=${coin.id}`}>
+      <div className={`bg-crypto-card border border-crypto-border rounded-xl p-4 hover:border-crypto-accent/50 transition-all cursor-pointer ${isUp ? 'hover:glow-green' : 'hover:glow-red'}`}>
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center space-x-3">
+            <img src={coin.image} alt={coin.name} className="w-8 h-8 rounded-full" />
+            <div>
+              <p className="font-semibold text-sm">{coin.name}</p>
+              <p className="text-xs text-gray-500 uppercase">{coin.symbol}</p>
+            </div>
+          </div>
+          <span className="text-xs text-gray-500">#{coin.market_cap_rank}</span>
+        </div>
+        <div className="flex items-end justify-between">
+          <div>
+            <p className="text-lg font-bold">{formatCurrency(coin.current_price)}</p>
+            <p className={`text-xs font-medium ${isUp ? 'text-crypto-green' : 'text-crypto-red'}`}>
+              {isUp ? '▲' : '▼'} {formatPercent(coin.price_change_percentage_24h)}
+            </p>
+          </div>
+          {coin.sparkline_in_7d && (
+            <div className="w-24 h-12">
+              <SparklineChart data={coin.sparkline_in_7d.price} isUp={isUp} />
+            </div>
+          )}
+        </div>
+      </div>
+    </Link>
+  );
+}
+'@ | Set-Content -Path "src\components\PriceCard.tsx" -Encoding UTF8
+
+@'
+'use client';
+
+import { Signal } from '@/types';
+
+export default function SignalCard({ signal }: { signal: Signal }) {
+  const getSignalColor = (s: string) => {
+    switch (s) {
+      case 'BUY': return 'border-crypto-green bg-crypto-green/5';
+      case 'SELL': return 'border-crypto-red bg-crypto-red/5';
+      default: return 'border-crypto-yellow bg-crypto-yellow/5';
+    }
+  };
+
+  const getSignalBadge = (s: string) => {
+    switch (s) {
+      case 'BUY': return <span className="bg-crypto-green text-white text-xs font-bold px-3 py-1 rounded-full">BUY</span>;
+      case 'SELL': return <span className="bg-crypto-red text-white text-xs font-bold px-3 py-1 rounded-full">SELL</span>;
+      default: return <span className="bg-crypto-yellow text-black text-xs font-bold px-3 py-1 rounded-full">HOLD</span>;
+    }
+  };
+
+  const getStrengthBar = (strength: number) => {
+    const width = Math.min(Math.max(strength, 0), 100);
+    let color = 'bg-crypto-yellow';
+    if (strength >= 70) color = 'bg-crypto-green';
+    else if (strength <= 30) color = 'bg-crypto-red';
+    
+    return (
+      <div className="w-full bg-gray-700 rounded-full h-1.5 mt-1">
+        <div className={`${color} h-1.5 rounded-full transition-all`} style={{ width: `${width}%` }} />
+      </div>
+    );
+  };
+
+  const getRSIColor = (rsi: number) => {
+    if (rsi >= 70) return 'text-crypto-red';
+    if (rsi <= 30) return 'text-crypto-green';
+    return 'text-gray-400';
+  };
+
+  return (
+    <div className={`border rounded-xl p-5 ${getSignalColor(signal.signal)} transition-all hover:scale-[1.01]`}>
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center space-x-3">
+          <img src={signal.image} alt={signal.name} className="w-10 h-10 rounded-full" />
+          <div>
+            <p className="font-bold">{signal.name}</p>
+            <p className="text-xs text-gray-500 uppercase">{signal.symbol}</p>
+          </div>
+        </div>
+        {getSignalBadge(signal.signal)}
+      </div>
+
+      <div className="grid grid-cols-3 gap-4 mb-4">
+        <div>
+          <p className="text-xs text-gray-500">RSI (14)</p>
+          <p className={`font-bold ${getRSIColor(signal.rsi)}`}>{signal.rsi.toFixed(1)}</p>
+        </div>
+        <div>
+          <p className="text-xs text-gray-500">24h Change</p>
+          <p className={`font-bold ${signal.priceChange24h >= 0 ? 'text-crypto-green' : 'text-crypto-red'}`}>
+            {signal.priceChange24h >= 0 ? '+' : ''}{signal.priceChange24h.toFixed(2)}%
+          </p>
+        </div>
+        <div>
+          <p className="text-xs text-gray-500">7d Change</p>
+          <p className={`font-bold ${signal.priceChange7d >= 0 ? 'text-crypto-green' : 'text-crypto-red'}`}>
+            {signal.priceChange7d >= 0 ? '+' : ''}{signal.priceChange7d.toFixed(2)}%
+          </p>
+        </div>
+      </div>
+
+      <div className="mb-3">
+        <div className="flex justify-between text-xs text-gray-500 mb-1">
+          <span>Signal Strength</span>
+          <span>{signal.strength}%</span>
+        </div>
+        {getStrengthBar(signal.strength)}
+      </div>
+
+      <p className="text-xs text-gray-400 italic">{signal.reason}</p>
+    </div>
+  );
+}
+'@ | Set-Content -Path "src\components\SignalCard.tsx" -Encoding UTF8
+
+@'
+'use client';
+
+import { LineChart, Line, ResponsiveContainer } from 'recharts';
+
+export default function SparklineChart({ data, isUp }: { data: number[]; isUp: boolean }) {
+  const sampled = data.filter((_, i) => i % 4 === 0).map((price, i) => ({ i, price }));
+
+  return (
+    <ResponsiveContainer width="100%" height="100%">
+      <LineChart data={sampled}>
+        <Line
+          type="monotone"
+          dataKey="price"
+          stroke={isUp ? '#10b981' : '#ef4444'}
+          strokeWidth={1.5}
+          dot={false}
+        />
+      </LineChart>
+    </ResponsiveContainer>
+  );
+}
+'@ | Set-Content -Path "src\components\SparklineChart.tsx" -Encoding UTF8
+
+@'
+'use client';
+
+import { useState } from 'react';
+import { CryptoPrice, Portfolio } from '@/types';
+import { executeBuy, executeSell, formatCurrency } from '@/lib/trading';
+
+interface TradeFormProps {
+  coin: CryptoPrice;
+  portfolio: Portfolio;
+  onTrade: (portfolio: Portfolio) => void;
+}
+
+export default function TradeForm({ coin, portfolio, onTrade }: TradeFormProps) {
+  const [side, setSide] = useState<'buy' | 'sell'>('buy');
+  const [amount, setAmount] = useState('');
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+
+  const holding = portfolio.holdings.find(h => h.coinId === coin.id);
+  const total = parseFloat(amount || '0') * coin.current_price;
+
+  const handleTrade = () => {
+    setError('');
+    setSuccess('');
+    const qty = parseFloat(amount);
+    if (isNaN(qty) || qty <= 0) {
+      setError('Enter a valid amount');
+      return;
+    }
+
+    let result;
+    if (side === 'buy') {
+      result = executeBuy({ ...portfolio }, coin, qty);
+    } else {
+      result = executeSell({ ...portfolio }, coin, qty);
+    }
+
+    if (result.error) {
+      setError(result.error);
+      return;
+    }
+
+    setSuccess(`${side === 'buy' ? 'Bought' : 'Sold'} ${qty} ${coin.symbol.toUpperCase()} at ${formatCurrency(coin.current_price)}`);
+    setAmount('');
+    onTrade(result.portfolio);
+  };
+
+  const setPercentage = (pct: number) => {
+    if (side === 'buy') {
+      const maxAmount = portfolio.cash / coin.current_price;
+      setAmount((maxAmount * pct).toFixed(8));
+    } else if (holding) {
+      setAmount((holding.amount * pct).toFixed(8));
+    }
+  };
+
+  return (
+    <div className="bg-crypto-card border border-crypto-border rounded-xl p-6">
+      <div className="flex rounded-lg overflow-hidden mb-6">
+        <button
+          onClick={() => { setSide('buy'); setError(''); setSuccess(''); }}
+          className={`flex-1 py-3 font-bold text-sm transition-all ${
+            side === 'buy'
+              ? 'bg-crypto-green text-white'
+              : 'bg-crypto-border text-gray-400 hover:text-white'
+          }`}
+        >
+          BUY
+        </button>
+        <button
+          onClick={() => { setSide('sell'); setError(''); setSuccess(''); }}
+          className={`flex-1 py-3 font-bold text-sm transition-all ${
+            side === 'sell'
+              ? 'bg-crypto-red text-white'
+              : 'bg-crypto-border text-gray-400 hover:text-white'
+          }`}
+        >
+          SELL
+        </button>
+      </div>
+
+      <div className="space-y-4">
+        <div>
+          <label className="text-xs text-gray-500 uppercase tracking-wider">
+            Amount ({coin.symbol.toUpperCase()})
+          </label>
+          <input
+            type="number"
+            value={amount}
+            onChange={e => { setAmount(e.target.value); setError(''); setSuccess(''); }}
+            placeholder="0.00"
+            className="w-full bg-crypto-dark border border-crypto-border rounded-lg px-4 py-3 mt-1 text-white placeholder-gray-600 focus:border-crypto-accent focus:outline-none"
+            step="any"
+            min="0"
+          />
+        </div>
+
+        <div className="flex gap-2">
+          {[0.25, 0.5, 0.75, 1].map(pct => (
+            <button
+              key={pct}
+              onClick={() => setPercentage(pct)}
+              className="flex-1 text-xs py-1.5 bg-crypto-border rounded hover:bg-gray-600 transition-colors"
+            >
+              {pct === 1 ? 'MAX' : `${pct * 100}%`}
+            </button>
+          ))}
+        </div>
+
+        <div className="bg-crypto-dark rounded-lg p-4 space-y-2">
+          <div className="flex justify-between text-sm">
+            <span className="text-gray-500">Price</span>
+            <span>{formatCurrency(coin.current_price)}</span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-gray-500">Total</span>
+            <span className="font-bold">{formatCurrency(total)}</span>
+          </div>
+          <div className="flex justify-between text-sm">
+            <span className="text-gray-500">Available</span>
+            <span>{side === 'buy' ? formatCurrency(portfolio.cash) : `${holding?.amount.toFixed(6) || '0'} ${coin.symbol.toUpperCase()}`}</span>
+          </div>
+        </div>
+
+        {error && (
+          <div className="bg-crypto-red/10 border border-crypto-red/30 rounded-lg p-3 text-sm text-crypto-red">
+            {error}
+          </div>
+        )}
+        {success && (
+          <div className="bg-crypto-green/10 border border-crypto-green/30 rounded-lg p-3 text-sm text-crypto-green">
+            {success}
+          </div>
+        )}
+
+        <button
+          onClick={handleTrade}
+          className={`w-full py-3 rounded-lg font-bold text-white transition-all ${
+            side === 'buy'
+              ? 'bg-crypto-green hover:bg-crypto-green/80'
+              : 'bg-crypto-red hover:bg-crypto-red/80'
+          }`}
+        >
+          {side === 'buy' ? 'Buy' : 'Sell'} {coin.symbol.toUpperCase()}
+        </button>
+      </div>
+    </div>
+  );
+}
+'@ | Set-Content -Path "src\components\TradeForm.tsx" -Encoding UTF8
+
+@'
+import { CryptoPrice, MarketStats } from '@/types';
+
+const BASE_URL = 'https://api.coingecko.com/api/v3';
+
+export async function fetchPrices(page: number = 1, perPage: number = 50): Promise<CryptoPrice[]> {
+  const res = await fetch(
+    `${BASE_URL}/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=${perPage}&page=${page}&sparkline=true&price_change_percentage=7d`,
+    { next: { revalidate: 60 } }
+  );
+  if (!res.ok) throw new Error('Failed to fetch prices');
+  return res.json();
+}
+
+export async function fetchCoinPrice(coinId: string): Promise<CryptoPrice> {
+  const res = await fetch(
+    `${BASE_URL}/coins/markets?vs_currency=usd&ids=${coinId}&sparkline=true&price_change_percentage=7d`,
+    { next: { revalidate: 30 } }
+  );
+  if (!res.ok) throw new Error('Failed to fetch coin price');
+  const data = await res.json();
+  return data[0];
+}
+
+export async function fetchMarketStats(): Promise<MarketStats> {
+  const res = await fetch(`${BASE_URL}/global`, { next: { revalidate: 120 } });
+  if (!res.ok) throw new Error('Failed to fetch market stats');
+  const data = await res.json();
+  
+  let fearGreedIndex = 50;
+  let fearGreedLabel = 'Neutral';
+  
+  try {
+    const fgRes = await fetch('https://api.alternative.me/fng/', { next: { revalidate: 300 } });
+    if (fgRes.ok) {
+      const fgData = await fgRes.json();
+      fearGreedIndex = parseInt(fgData.data[0].value);
+      fearGreedLabel = fgData.data[0].value_classification;
+    }
+  } catch {
+    // Fear & Greed API is optional
+  }
+  
+  return {
+    totalMarketCap: data.data.total_market_cap.usd,
+    totalVolume: data.data.total_volume.usd,
+    btcDominance: data.data.market_cap_percentage.btc,
+    marketCapChange24h: data.data.market_cap_change_percentage_24h_usd,
+    fearGreedIndex,
+    fearGreedLabel,
+  };
+}
+
+export async function searchCoins(query: string): Promise<Array<{ id: string; name: string; symbol: string; thumb: string }>> {
+  const res = await fetch(`${BASE_URL}/search?query=${encodeURIComponent(query)}`);
+  if (!res.ok) return [];
+  const data = await res.json();
+  return data.coins?.slice(0, 10) || [];
+}
+
+export async function fetchCoinHistory(coinId: string, days: number = 7): Promise<Array<{ time: number; price: number }>> {
+  const res = await fetch(
+    `${BASE_URL}/coins/${coinId}/market_chart?vs_currency=usd&days=${days}`,
+    { next: { revalidate: 300 } }
+  );
+  if (!res.ok) return [];
+  const data = await res.json();
+  return (data.prices || []).map((p: number[]) => ({ time: p[0], price: p[1] }));
+}
+'@ | Set-Content -Path "src\lib\coingecko.ts" -Encoding UTF8
+
+@'
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
+
+let _supabase: SupabaseClient | null = null;
+let _supabaseAdmin: SupabaseClient | null = null;
+
+export function getSupabase() {
+  if (!_supabase) {
+    _supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+    );
+  }
+  return _supabase;
+}
+
+export function getSupabaseAdmin() {
+  if (!_supabaseAdmin) {
+    _supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+      process.env.SUPABASE_SERVICE_ROLE_KEY || ''
+    );
+  }
+  return _supabaseAdmin;
+}
+
+export const supabase = new Proxy({} as SupabaseClient, {
+  get(_, prop) { return (getSupabase() as Record<string, unknown>)[prop as string]; }
+});
+export const supabaseAdmin = new Proxy({} as SupabaseClient, {
+  get(_, prop) { return (getSupabaseAdmin() as Record<string, unknown>)[prop as string]; }
+});
+'@ | Set-Content -Path "src\lib\supabase.ts" -Encoding UTF8
+
+@'
+import { Portfolio, Holding, Trade, CryptoPrice } from '@/types';
+
+const STORAGE_KEY = 'cryptotoolbox_portfolio';
+const DEFAULT_CASH = 10000;
+
+export function getPortfolio(): Portfolio {
+  if (typeof window === 'undefined') {
+    return { cash: DEFAULT_CASH, startingCash: DEFAULT_CASH, holdings: [], trades: [] };
+  }
+  const stored = localStorage.getItem(STORAGE_KEY);
+  if (!stored) {
+    return { cash: DEFAULT_CASH, startingCash: DEFAULT_CASH, holdings: [], trades: [] };
+  }
+  try {
+    return JSON.parse(stored);
+  } catch {
+    return { cash: DEFAULT_CASH, startingCash: DEFAULT_CASH, holdings: [], trades: [] };
+  }
+}
+
+export function savePortfolio(portfolio: Portfolio): void {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(portfolio));
+}
+
+export function resetPortfolio(startingCash: number = DEFAULT_CASH): Portfolio {
+  const portfolio: Portfolio = {
+    cash: startingCash,
+    startingCash: startingCash,
+    holdings: [],
+    trades: [],
+  };
+  savePortfolio(portfolio);
+  return portfolio;
+}
+
+export function executeBuy(
+  portfolio: Portfolio,
+  coin: CryptoPrice,
+  amount: number
+): { portfolio: Portfolio; error?: string } {
+  const total = amount * coin.current_price;
+  
+  if (total > portfolio.cash) {
+    return { portfolio, error: 'Insufficient funds' };
+  }
+  
+  if (amount <= 0) {
+    return { portfolio, error: 'Amount must be greater than 0' };
+  }
+
+  const existing = portfolio.holdings.find(h => h.coinId === coin.id);
+  
+  if (existing) {
+    const newTotalInvested = existing.totalInvested + total;
+    const newAmount = existing.amount + amount;
+    existing.amount = newAmount;
+    existing.totalInvested = newTotalInvested;
+    existing.avgBuyPrice = newTotalInvested / newAmount;
+  } else {
+    portfolio.holdings.push({
+      coinId: coin.id,
+      symbol: coin.symbol,
+      name: coin.name,
+      image: coin.image,
+      amount,
+      avgBuyPrice: coin.current_price,
+      totalInvested: total,
+    });
+  }
+
+  portfolio.cash -= total;
+
+  const trade: Trade = {
+    id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+    coinId: coin.id,
+    symbol: coin.symbol,
+    name: coin.name,
+    type: 'buy',
+    amount,
+    price: coin.current_price,
+    total,
+    timestamp: Date.now(),
+  };
+  portfolio.trades.unshift(trade);
+
+  savePortfolio(portfolio);
+  return { portfolio };
+}
+
+export function executeSell(
+  portfolio: Portfolio,
+  coin: CryptoPrice,
+  amount: number
+): { portfolio: Portfolio; error?: string } {
+  const holding = portfolio.holdings.find(h => h.coinId === coin.id);
+  
+  if (!holding) {
+    return { portfolio, error: 'You don\'t hold this coin' };
+  }
+  
+  if (amount > holding.amount) {
+    return { portfolio, error: `You only hold ${holding.amount} ${coin.symbol.toUpperCase()}` };
+  }
+  
+  if (amount <= 0) {
+    return { portfolio, error: 'Amount must be greater than 0' };
+  }
+
+  const total = amount * coin.current_price;
+  
+  const fractionSold = amount / holding.amount;
+  holding.totalInvested -= holding.totalInvested * fractionSold;
+  holding.amount -= amount;
+
+  if (holding.amount < 0.00000001) {
+    portfolio.holdings = portfolio.holdings.filter(h => h.coinId !== coin.id);
+  }
+
+  portfolio.cash += total;
+
+  const trade: Trade = {
+    id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+    coinId: coin.id,
+    symbol: coin.symbol,
+    name: coin.name,
+    type: 'sell',
+    amount,
+    price: coin.current_price,
+    total,
+    timestamp: Date.now(),
+  };
+  portfolio.trades.unshift(trade);
+
+  savePortfolio(portfolio);
+  return { portfolio };
+}
+
+export function calculatePnL(holdings: Holding[], prices: CryptoPrice[]): {
+  totalValue: number;
+  totalInvested: number;
+  totalPnL: number;
+  totalPnLPercent: number;
+} {
+  let totalValue = 0;
+  let totalInvested = 0;
+
+  holdings.forEach(holding => {
+    const price = prices.find(p => p.id === holding.coinId);
+    if (price) {
+      totalValue += holding.amount * price.current_price;
+    }
+    totalInvested += holding.totalInvested;
+  });
+
+  const totalPnL = totalValue - totalInvested;
+  const totalPnLPercent = totalInvested > 0 ? (totalPnL / totalInvested) * 100 : 0;
+
+  return { totalValue, totalInvested, totalPnL, totalPnLPercent };
+}
+
+export function formatCurrency(value: number): string {
+  if (Math.abs(value) >= 1) {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(value);
+  }
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 6,
+  }).format(value);
+}
+
+export function formatNumber(value: number): string {
+  if (value >= 1e12) return `$${(value / 1e12).toFixed(2)}T`;
+  if (value >= 1e9) return `$${(value / 1e9).toFixed(2)}B`;
+  if (value >= 1e6) return `$${(value / 1e6).toFixed(2)}M`;
+  return formatCurrency(value);
+}
+
+export function formatPercent(value: number): string {
+  return `${value >= 0 ? '+' : ''}${value.toFixed(2)}%`;
+}
+'@ | Set-Content -Path "src\lib\trading.ts" -Encoding UTF8
+
+@'
+export interface CryptoPrice {
+  id: string;
+  symbol: string;
+  name: string;
+  image: string;
+  current_price: number;
+  market_cap: number;
+  market_cap_rank: number;
+  total_volume: number;
+  price_change_percentage_24h: number;
+  price_change_percentage_7d_in_currency?: number;
+  circulating_supply: number;
+  sparkline_in_7d?: { price: number[] };
+  high_24h: number;
+  low_24h: number;
+}
+
+export interface Holding {
+  coinId: string;
+  symbol: string;
+  name: string;
+  image: string;
+  amount: number;
+  avgBuyPrice: number;
+  totalInvested: number;
+}
+
+export interface Trade {
+  id: string;
+  coinId: string;
+  symbol: string;
+  name: string;
+  type: 'buy' | 'sell';
+  amount: number;
+  price: number;
+  total: number;
+  timestamp: number;
+}
+
+export interface Portfolio {
+  cash: number;
+  startingCash: number;
+  holdings: Holding[];
+  trades: Trade[];
+}
+
+export interface Signal {
+  coinId: string;
+  symbol: string;
+  name: string;
+  image: string;
+  signal: 'BUY' | 'SELL' | 'HOLD';
+  strength: number;
+  rsi: number;
+  priceChange24h: number;
+  priceChange7d: number;
+  volumeChange: number;
+  reason: string;
+  timestamp: number;
+}
+
+export interface NewsItem {
+  id: string;
+  title: string;
+  url: string;
+  source: string;
+  thumbnail?: string;
+  created_at: string;
+  sentiment?: 'positive' | 'negative' | 'neutral';
+}
+
+export interface MarketStats {
+  totalMarketCap: number;
+  totalVolume: number;
+  btcDominance: number;
+  marketCapChange24h: number;
+  fearGreedIndex: number;
+  fearGreedLabel: string;
+}
+'@ | Set-Content -Path "src\types\index.ts" -Encoding UTF8
+
+@'
+-- ============================================
+-- CryptoToolbox Schema (ct_ prefix for shared DB)
+-- ============================================
+
+-- News articles cached from Reddit/sources
+CREATE TABLE IF NOT EXISTS ct_news (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  external_id TEXT UNIQUE NOT NULL,
+  title TEXT NOT NULL,
+  url TEXT NOT NULL,
+  source TEXT NOT NULL,
+  thumbnail TEXT,
+  sentiment TEXT DEFAULT 'neutral' CHECK (sentiment IN ('positive', 'negative', 'neutral')),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  fetched_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_ct_news_created ON ct_news(created_at DESC);
+CREATE INDEX idx_ct_news_sentiment ON ct_news(sentiment);
+
+-- Price alerts set by users
+CREATE TABLE IF NOT EXISTS ct_price_alerts (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  coin_id TEXT NOT NULL,
+  symbol TEXT NOT NULL,
+  target_price NUMERIC NOT NULL,
+  direction TEXT NOT NULL CHECK (direction IN ('above', 'below')),
+  triggered BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  triggered_at TIMESTAMPTZ
+);
+
+CREATE INDEX idx_ct_alerts_user ON ct_price_alerts(user_id);
+CREATE INDEX idx_ct_alerts_coin ON ct_price_alerts(coin_id);
+CREATE INDEX idx_ct_alerts_active ON ct_price_alerts(triggered) WHERE triggered = FALSE;
+
+-- Cached signals for faster loading
+CREATE TABLE IF NOT EXISTS ct_signals (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  coin_id TEXT NOT NULL,
+  symbol TEXT NOT NULL,
+  name TEXT NOT NULL,
+  image TEXT,
+  signal TEXT NOT NULL CHECK (signal IN ('BUY', 'SELL', 'HOLD')),
+  strength INTEGER NOT NULL,
+  rsi NUMERIC,
+  price_change_24h NUMERIC,
+  price_change_7d NUMERIC,
+  volume_change NUMERIC,
+  reason TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX idx_ct_signals_coin ON ct_signals(coin_id);
+CREATE INDEX idx_ct_signals_signal ON ct_signals(signal);
+CREATE INDEX idx_ct_signals_created ON ct_signals(created_at DESC);
+
+-- Watchlist items
+CREATE TABLE IF NOT EXISTS ct_watchlist (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  coin_id TEXT NOT NULL,
+  symbol TEXT NOT NULL,
+  name TEXT NOT NULL,
+  added_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(user_id, coin_id)
+);
+
+CREATE INDEX idx_ct_watchlist_user ON ct_watchlist(user_id);
+
+-- Row Level Security
+ALTER TABLE ct_news ENABLE ROW LEVEL SECURITY;
+ALTER TABLE ct_price_alerts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE ct_signals ENABLE ROW LEVEL SECURITY;
+ALTER TABLE ct_watchlist ENABLE ROW LEVEL SECURITY;
+
+-- Public read access for news and signals
+CREATE POLICY "Public read ct_news" ON ct_news FOR SELECT USING (true);
+CREATE POLICY "Public read ct_signals" ON ct_signals FOR SELECT USING (true);
+CREATE POLICY "Public read ct_watchlist" ON ct_watchlist FOR SELECT USING (true);
+CREATE POLICY "Public read ct_price_alerts" ON ct_price_alerts FOR SELECT USING (true);
+
+-- Service role write access
+CREATE POLICY "Service write ct_news" ON ct_news FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Service write ct_signals" ON ct_signals FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Service write ct_watchlist" ON ct_watchlist FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Service write ct_price_alerts" ON ct_price_alerts FOR ALL USING (true) WITH CHECK (true);
+'@ | Set-Content -Path "supabase\schema.sql" -Encoding UTF8
+
+Write-Host ""
+Write-Host "All files created! Installing dependencies..." -ForegroundColor Green
+npm install
+
+Write-Host ""
+Write-Host "Testing build..." -ForegroundColor Yellow
+npm run build
+
+Write-Host ""
+Write-Host "BUILD COMPLETE! CryptoToolbox is ready." -ForegroundColor Green
+Write-Host "Next steps:" -ForegroundColor Cyan
+Write-Host "  1. git init && git add . && git commit -m initial" -ForegroundColor White
+Write-Host "  2. Create GitHub repo and push" -ForegroundColor White
+Write-Host "  3. npx vercel --prod" -ForegroundColor White

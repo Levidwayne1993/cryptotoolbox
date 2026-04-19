@@ -25,7 +25,7 @@ export default function PriceCard({ coin }: { coin: CryptoPrice }) {
           <div>
             <p className="text-lg font-bold">{formatCurrency(coin.current_price)}</p>
             <p className={`text-xs font-medium ${isUp ? 'text-crypto-green' : 'text-crypto-red'}`}>
-              {isUp ? 'â–²' : 'â–¼'} {formatPercent(coin.price_change_percentage_24h)}
+              {isUp ? '▲' : '▼'} {formatPercent(coin.price_change_percentage_24h)}
             </p>
           </div>
           {coin.sparkline_in_7d && (

@@ -15,7 +15,7 @@ export default function NewsPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
         <div className="bg-crypto-card border border-crypto-border rounded-xl p-4 text-center">
-          <p className="text-2xl mb-1">ðŸŸ¢</p>
+          <p className="text-2xl mb-1">🟢</p>
           <p className="text-xs text-gray-500 uppercase">Bullish</p>
           <p className="text-sm text-gray-400 mt-1">Positive sentiment keywords detected</p>
         </div>

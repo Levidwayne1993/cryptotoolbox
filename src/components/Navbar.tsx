@@ -1,62 +1,67 @@
-﻿'use client';
+﻿// src/components/Navbar.tsx — v2.0 (added Bot link, fixed encoding)
+'use client';
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useState } from 'react';
 
-const links = [
-  { href: '/', label: 'Dashboard', icon: 'ðŸ“Š' },
-  { href: '/trade', label: 'Trade', icon: 'ðŸ’±' },
-  { href: '/portfolio', label: 'Portfolio', icon: 'ðŸ’¼' },
-  { href: '/signals', label: 'Signals', icon: 'ðŸ“¡' },
-  { href: '/news', label: 'News', icon: 'ðŸ“°' },
+const navItems = [
+  { name: 'Dashboard', href: '/', icon: '\u{1F4CA}' },
+  { name: 'Trade', href: '/trade', icon: '\u{1F4B1}' },
+  { name: 'Portfolio', href: '/portfolio', icon: '\u{1F4BC}' },
+  { name: 'Bot vs You', href: '/bot', icon: '\u{1F916}' },
+  { name: 'Signals', href: '/signals', icon: '\u{1F4E1}' },
+  { name: 'News', href: '/news', icon: '\u{1F4F0}' },
 ];
 
 export default function Navbar() {
   const pathname = usePathname();
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
     <nav className="bg-crypto-card border-b border-crypto-border sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          <Link href="/" className="flex items-center space-x-2">
-            <span className="text-2xl">ðŸ”§</span>
-            <span className="text-xl font-bold bg-gradient-to-r from-crypto-accent to-crypto-purple bg-clip-text text-transparent">
-              CryptoToolbox
+          <Link href="/" className="flex items-center gap-2">
+            <span className="text-xl font-bold text-crypto-accent">
+              {'\u{1F527}'} CryptoToolbox
             </span>
           </Link>
-          <div className="hidden md:flex items-center space-x-1">
-            {links.map(link => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                  pathname === link.href
+          <div className="hidden md:flex items-center gap-1">
+            {navItems.map((item) => (
+              <Link key={item.href} href={item.href}
+                className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                  pathname === item.href
                     ? 'bg-crypto-accent/20 text-crypto-accent'
-                    : 'text-gray-400 hover:text-white hover:bg-white/5'
-                }`}
-              >
-                <span className="mr-1.5">{link.icon}</span>
-                {link.label}
+                    : 'text-gray-400 hover:text-white hover:bg-crypto-border'
+                }`}>
+                <span className="mr-1.5">{item.icon}</span>{item.name}
               </Link>
             ))}
           </div>
-          {/* Mobile menu */}
-          <div className="md:hidden flex items-center space-x-1 overflow-x-auto">
-            {links.map(link => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={`p-2 rounded-lg text-xs whitespace-nowrap ${
-                  pathname === link.href
-                    ? 'bg-crypto-accent/20 text-crypto-accent'
-                    : 'text-gray-400'
-                }`}
-              >
-                {link.icon}
-              </Link>
-            ))}
-          </div>
+          <button onClick={() => setMobileOpen(!mobileOpen)}
+            className="md:hidden p-2 rounded-lg text-gray-400 hover:text-white hover:bg-crypto-border">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              {mobileOpen
+                ? <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                : <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />}
+            </svg>
+          </button>
         </div>
+        {mobileOpen && (
+          <div className="md:hidden pb-4 space-y-1">
+            {navItems.map((item) => (
+              <Link key={item.href} href={item.href} onClick={() => setMobileOpen(false)}
+                className={`block px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                  pathname === item.href
+                    ? 'bg-crypto-accent/20 text-crypto-accent'
+                    : 'text-gray-400 hover:text-white hover:bg-crypto-border'
+                }`}>
+                <span className="mr-2">{item.icon}</span>{item.name}
+              </Link>
+            ))}
+          </div>
+        )}
       </div>
     </nav>
   );

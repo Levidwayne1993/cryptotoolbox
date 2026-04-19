@@ -41,7 +41,7 @@ export default function MarketOverview() {
         <p className="text-xs text-gray-500 uppercase tracking-wider">Market Cap</p>
         <p className="text-lg font-bold mt-1">{formatNumber(stats.totalMarketCap)}</p>
         <p className={`text-xs mt-1 ${stats.marketCapChange24h >= 0 ? 'text-crypto-green' : 'text-crypto-red'}`}>
-          {stats.marketCapChange24h >= 0 ? 'â–²' : 'â–¼'} {Math.abs(stats.marketCapChange24h).toFixed(2)}%
+          {stats.marketCapChange24h >= 0 ? '▲' : '▼'} {Math.abs(stats.marketCapChange24h).toFixed(2)}%
         </p>
       </div>
       <div className="bg-crypto-card border border-crypto-border rounded-xl p-4">
@@ -64,7 +64,7 @@ export default function MarketOverview() {
       <div className="bg-crypto-card border border-crypto-border rounded-xl p-4">
         <p className="text-xs text-gray-500 uppercase tracking-wider">Market Trend</p>
         <p className={`text-lg font-bold mt-1 ${stats.marketCapChange24h >= 0 ? 'text-crypto-green' : 'text-crypto-red'}`}>
-          {stats.marketCapChange24h >= 0 ? 'ðŸŸ¢ Bullish' : 'ðŸ”´ Bearish'}
+          {stats.marketCapChange24h >= 0 ? '🟢 Bullish' : 'ðŸ”´ Bearish'}
         </p>
       </div>
     </div>

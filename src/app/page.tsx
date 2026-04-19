@@ -42,7 +42,7 @@ export default function Dashboard() {
             CryptoToolbox
           </span>
         </h1>
-        <p className="text-gray-400">Paper trade crypto with real market prices. Start with $10,000 â€” or set any amount.</p>
+        <p className="text-gray-400">Paper trade crypto with real market prices. Start with $10,000 "” or set any amount.</p>
       </div>
 
       {/* Portfolio Summary */}
@@ -80,7 +80,7 @@ export default function Dashboard() {
       {!loading && prices.length > 0 && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
           <div>
-            <h3 className="text-lg font-bold mb-4 text-crypto-green">ðŸš€ Top Gainers (24h)</h3>
+            <h3 className="text-lg font-bold mb-4 text-crypto-green">🚀 Top Gainers (24h)</h3>
             <div className="space-y-3">
               {topGainers.map(coin => (
                 <Link key={coin.id} href={`/trade?coin=${coin.id}`} className="flex items-center justify-between bg-crypto-card border border-crypto-border rounded-xl p-4 hover:border-crypto-green/50 transition-all">

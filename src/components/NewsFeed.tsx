@@ -59,7 +59,8 @@ export default function NewsFeed({ limit = 10 }: { limit?: number }) {
               <h3 className="font-medium text-sm mb-2 line-clamp-2">{item.title}</h3>
               <div className="flex items-center gap-3 text-xs text-gray-500">
                 <span>{item.source}</span>
-                <span>{new Date(item.created_at).toLocaleDateString()}</span>
+                <span>{new Date(item.created_at || item.publishedAt).toLocaleDateString()}</span>
+
                 {getSentimentBadge(item.sentiment)}
               </div>
             </div>

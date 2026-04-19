@@ -628,7 +628,8 @@ function generateSignal(coin: {
     priceChange7d: change7d,
     volumeChange: volumeRatio,
     reason: reasons.join('. ') || 'No strong signals detected',
-    timestamp: Date.now(),
+    timestamp: new Date().toISOString(),
+
   };
 }
 
@@ -1423,7 +1424,8 @@ export default function NewsFeed({ limit = 10 }: { limit?: number }) {
               <h3 className="font-medium text-sm mb-2 line-clamp-2">{item.title}</h3>
               <div className="flex items-center gap-3 text-xs text-gray-500">
                 <span>{item.source}</span>
-                <span>{new Date(item.created_at).toLocaleDateString()}</span>
+                <span>{new Date(item.created_at || item.publishedAt).toLocaleDateString()}</span>
+
                 {getSentimentBadge(item.sentiment)}
               </div>
             </div>
@@ -2014,7 +2016,8 @@ export function executeBuy(
     amount,
     price: coin.current_price,
     total,
-    timestamp: Date.now(),
+    timestamp: new Date().toISOString(),
+
   };
   portfolio.trades.unshift(trade);
 
@@ -2062,7 +2065,8 @@ export function executeSell(
     amount,
     price: coin.current_price,
     total,
-    timestamp: Date.now(),
+    timestamp: new Date().toISOString(),
+
   };
   portfolio.trades.unshift(trade);
 

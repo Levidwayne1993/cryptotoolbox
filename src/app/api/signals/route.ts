@@ -88,7 +88,8 @@ function generateSignal(coin: {
     priceChange7d: change7d,
     volumeChange: volumeRatio,
     reason: reasons.join('. ') || 'No strong signals detected',
-    timestamp: Date.now(),
+    timestamp: new Date().toISOString(),
+
   };
 }
 

@@ -80,7 +80,8 @@ export function executeBuy(
     amount,
     price: coin.current_price,
     total,
-    timestamp: Date.now(),
+    timestamp: new Date().toISOString(),
+
   };
   portfolio.trades.unshift(trade);
 
@@ -128,7 +129,8 @@ export function executeSell(
     amount,
     price: coin.current_price,
     total,
-    timestamp: Date.now(),
+    timestamp: new Date().toISOString(),
+
   };
   portfolio.trades.unshift(trade);
 

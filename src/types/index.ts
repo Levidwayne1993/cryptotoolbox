@@ -65,6 +65,7 @@ export interface NewsItem {
   url: string;
   source: string;
   publishedAt: string;
+  created_at?: string;
   thumbnail?: string;
   sentiment: 'bullish' | 'bearish' | 'neutral';
 }

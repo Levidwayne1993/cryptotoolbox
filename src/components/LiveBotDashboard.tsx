@@ -47,7 +47,7 @@ interface BotSettings {
   mode: string;
   strategy: string;
   current_balance: number;
-  pairs: string[];
+  selected_pairs: string[];
   updated_at: string;
 }
 

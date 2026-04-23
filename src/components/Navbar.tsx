@@ -1,4 +1,4 @@
-// src/components/Navbar.tsx — v3.0 (CryptoBot as homepage, renamed from Bot vs You)
+﻿// src/components/Navbar.tsx — v3.0 (CryptoBot as homepage, renamed from Bot vs You)
 'use client';
 
 import Link from 'next/link';

@@ -56,6 +56,15 @@ body {
   animation: slideUp 0.3s ease-out;
 }
 
+/* Fade-in for expandable detail panels */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-in {
+  animation: fadeIn 0.2s ease-out forwards;
+}
+
 /* Trade flash */
 .flash-green {
   animation: flashGreen 0.5s ease-out;

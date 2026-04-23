@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import { useState, useEffect, useCallback } from 'react';
 import { getSupabase } from '@/lib/supabase';
@@ -718,12 +718,12 @@ export default function LiveBotDashboard() {
                     <th className="text-left py-2 px-2">Pair</th>
                     <th className="text-right py-2 px-2">Entry</th>
                     <th className="text-right py-2 px-2">Current</th>
+                    <th className="text-right py-2 px-2">Take Profit</th>
+                    <th className="text-right py-2 px-2">Stop Loss</th>
                     <th className="text-right py-2 px-2">Qty</th>
                     <th className="text-right py-2 px-2">Value</th>
                     <th className="text-right py-2 px-2">P&amp;L</th>
                     <th className="text-right py-2 px-2">P&amp;L %</th>
-                    <th className="text-right py-2 px-2">Stop Loss</th>
-                    <th className="text-right py-2 px-2">Take Profit</th>
                     <th className="text-right py-2 px-2">Opened</th>
                   </tr>
                 </thead>
@@ -733,6 +733,12 @@ export default function LiveBotDashboard() {
                       <td className="py-2 px-2 text-white font-medium">{p.pair}</td>
                       <td className="py-2 px-2 text-right text-gray-300">{formatCurrency(p.entry_price)}</td>
                       <td className="py-2 px-2 text-right text-gray-300">{formatCurrency(p.current_price)}</td>
+                      <td className="py-2 px-2 text-right text-green-400/70 text-xs">
+                        {p.take_profit_price ? formatCurrency(p.take_profit_price) : '—'}
+                      </td>
+                      <td className="py-2 px-2 text-right text-red-400/70 text-xs">
+                        {p.stop_loss_price ? formatCurrency(p.stop_loss_price) : '—'}
+                      </td>
                       <td className="py-2 px-2 text-right text-gray-400 font-mono text-xs">{p.quantity.toFixed(6)}</td>
                       <td className="py-2 px-2 text-right text-gray-300">{formatCurrency(p.position_value)}</td>
                       <td className={`py-2 px-2 text-right font-medium ${p.unrealized_pnl >= 0 ? 'text-green-400' : 'text-red-400'}`}>
@@ -740,12 +746,6 @@ export default function LiveBotDashboard() {
                       </td>
                       <td className={`py-2 px-2 text-right ${p.unrealized_pnl_percent >= 0 ? 'text-green-400' : 'text-red-400'}`}>
                         {formatPercent(p.unrealized_pnl_percent)}
-                      </td>
-                      <td className="py-2 px-2 text-right text-red-400/70 text-xs">
-                        {p.stop_loss_price ? formatCurrency(p.stop_loss_price) : '—'}
-                      </td>
-                      <td className="py-2 px-2 text-right text-green-400/70 text-xs">
-                        {p.take_profit_price ? formatCurrency(p.take_profit_price) : '—'}
                       </td>
                       <td className="py-2 px-2 text-right text-gray-500 text-xs">{timeAgo(p.opened_at)}</td>
                     </tr>

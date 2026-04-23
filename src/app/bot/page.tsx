@@ -1,10 +1,3 @@
-// ============================================================
-// PROJECT: cryptotoolbox
-// FILE: src/app/bot/page.tsx  (REPLACE existing)
-// DESCRIPTION: Fixed bot page — removed duplicate header
-//   The LiveBotDashboard component already has its own header
-// ============================================================
-
 import dynamic from 'next/dynamic';
 import Navbar from '@/components/Navbar';
 
@@ -22,6 +15,12 @@ export default function BotPage() {
     <main className="min-h-screen bg-gray-950 text-white">
       <Navbar />
       <div className="max-w-6xl mx-auto px-4 py-8">
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold">Live Trading Bot</h1>
+          <p className="text-sm text-gray-400 mt-1">
+            Real-time data from your bot running on Railway — powered by Supabase
+          </p>
+        </div>
         <LiveBotDashboard />
       </div>
     </main>

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
@@ -46,7 +46,7 @@ interface BotSettings {
   id: string;
   mode: string;
   strategy: string;
-  balance: number;
+  current_balance: number;
   pairs: string[];
   updated_at: string;
 }
@@ -102,7 +102,7 @@ export default function LiveBotDashboard() {
   const totalRealizedPnl = closedTrades.reduce((sum, t) => sum + (t.pnl || 0), 0);
   const totalUnrealizedPnl = positions.reduce((sum, p) => sum + (p.pnl || 0), 0);
   const positionValue = positions.reduce((sum, p) => sum + (p.current_price || 0) * (p.amount || 0), 0);
-  const balance = settings?.balance || 0;
+  const balance = settings?.current_balance || 0;
   const totalValue = balance + positionValue;
 
   return (
@@ -113,25 +113,25 @@ export default function LiveBotDashboard() {
           <div className="flex items-center gap-4">
             <div className="relative">
               <div className="w-14 h-14 rounded-xl flex items-center justify-center text-2xl bg-green-500/20 animate-pulse">
-                🤖
+                ðŸ¤–
               </div>
               <div className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-gray-800 bg-green-500" />
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="text-lg font-bold text-white">
-                  {settings?.strategy === 'swing' ? '🌊 Swing Trader' : settings?.strategy || 'Bot'}
+                  {settings?.strategy === 'swing' ? 'ðŸŒŠ Swing Trader' : settings?.strategy || 'Bot'}
                 </h2>
                 <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400">
                   {settings?.mode?.toUpperCase() || 'PAPER'}
                 </span>
               </div>
-              <p className="text-xs text-gray-400">Running on Railway • Auto-refreshes every 30s</p>
+              <p className="text-xs text-gray-400">Running on Railway â€¢ Auto-refreshes every 30s</p>
               <p className="text-[10px] text-gray-500">Last refresh: {lastRefresh.toLocaleTimeString()}</p>
             </div>
           </div>
           <button onClick={fetchData} className="px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white text-xs rounded-lg transition-colors">
-            🔄 Refresh Now
+            ðŸ”„ Refresh Now
           </button>
         </div>
       </div>
@@ -148,7 +148,7 @@ export default function LiveBotDashboard() {
       <div className="flex gap-1 bg-gray-800/50 p-1 rounded-xl">
         {(['overview', 'positions', 'signals', 'trades'] as const).map((tab) => (
           <button key={tab} onClick={() => setActiveTab(tab)} className={`flex-1 py-2 px-3 text-xs font-medium rounded-lg transition-colors capitalize ${activeTab === tab ? 'bg-gray-700 text-white' : 'text-gray-400 hover:text-gray-300'}`}>
-            {tab === 'overview' && '📊 '}{tab === 'positions' && '💼 '}{tab === 'signals' && '📡 '}{tab === 'trades' && '📜 '}{tab}
+            {tab === 'overview' && 'ðŸ“Š '}{tab === 'positions' && 'ðŸ’¼ '}{tab === 'signals' && 'ðŸ“¡ '}{tab === 'trades' && 'ðŸ“œ '}{tab}
             {tab === 'positions' && positions.length > 0 && (<span className="ml-1 bg-cyan-500/20 text-cyan-400 px-1.5 py-0.5 rounded-full text-[10px]">{positions.length}</span>)}
           </button>
         ))}
@@ -198,11 +198,11 @@ function OverviewTab({ settings, closedTrades, totalRealizedPnl, positions }: { 
         <MiniStat label="Worst Trade" value={`$${worstTrade.toFixed(2)}`} color="#ef4444" />
       </div>
       <div className="bg-gray-900/50 rounded-xl p-3">
-        <h4 className="text-sm font-bold text-white mb-2">⚙️ Bot Configuration</h4>
+        <h4 className="text-sm font-bold text-white mb-2">âš™ï¸ Bot Configuration</h4>
         <div className="flex flex-wrap gap-4 text-[11px] text-gray-500">
           <span>Mode: <strong className="text-amber-400">{settings?.mode?.toUpperCase()}</strong></span>
           <span>Strategy: <strong className="text-cyan-400">{settings?.strategy}</strong></span>
-          <span>Pairs: <strong className="text-white">{settings?.pairs?.join(', ') || 'N/A'}</strong></span>
+          <span>Pairs: <strong className="text-white">{settings?.selected_pairs?.join(', ') || 'N/A'}</strong></span>
           <span>Open Positions: <strong className="text-white">{positions.length}</strong></span>
         </div>
       </div>
@@ -212,7 +212,7 @@ function OverviewTab({ settings, closedTrades, totalRealizedPnl, positions }: { 
 
 function PositionsTab({ positions }: { positions: BotPosition[] }) {
   if (positions.length === 0) {
-    return (<div className="text-center py-12 text-gray-500"><div className="text-4xl mb-2">💼</div><p className="text-sm">No open positions</p><p className="text-xs">The bot will open positions when it finds strong signals.</p></div>);
+    return (<div className="text-center py-12 text-gray-500"><div className="text-4xl mb-2">ðŸ’¼</div><p className="text-sm">No open positions</p><p className="text-xs">The bot will open positions when it finds strong signals.</p></div>);
   }
   return (
     <div className="space-y-2">
@@ -220,7 +220,7 @@ function PositionsTab({ positions }: { positions: BotPosition[] }) {
       {positions.map((pos) => (
         <div key={pos.id} className="bg-gray-900/50 rounded-xl p-3 border border-gray-700">
           <div className="flex items-center justify-between">
-            <div><div className="font-bold text-white text-sm">{pos.pair}</div><div className="text-[10px] text-gray-500">{pos.side.toUpperCase()} • {pos.strategy}</div></div>
+            <div><div className="font-bold text-white text-sm">{pos.pair}</div><div className="text-[10px] text-gray-500">{pos.side.toUpperCase()} â€¢ {pos.strategy}</div></div>
             <div className="text-right">
               <div className="text-sm font-bold" style={{ color: (pos.pnl || 0) >= 0 ? '#10b981' : '#ef4444' }}>{(pos.pnl || 0) >= 0 ? '+' : ''}${(pos.pnl || 0).toFixed(2)}</div>
               <div className="text-[11px]" style={{ color: (pos.pnl_pct || 0) >= 0 ? '#10b981' : '#ef4444' }}>{(pos.pnl_pct || 0) >= 0 ? '+' : ''}{(pos.pnl_pct || 0).toFixed(2)}%</div>
@@ -239,7 +239,7 @@ function PositionsTab({ positions }: { positions: BotPosition[] }) {
 
 function SignalsTab({ signals }: { signals: BotSignal[] }) {
   if (signals.length === 0) {
-    return (<div className="text-center py-12 text-gray-500"><div className="text-4xl mb-2">📡</div><p className="text-sm">No signals yet</p><p className="text-xs">Signals will appear as the bot analyzes markets.</p></div>);
+    return (<div className="text-center py-12 text-gray-500"><div className="text-4xl mb-2">ðŸ“¡</div><p className="text-sm">No signals yet</p><p className="text-xs">Signals will appear as the bot analyzes markets.</p></div>);
   }
   return (
     <div className="space-y-2">
@@ -265,7 +265,7 @@ function SignalsTab({ signals }: { signals: BotSignal[] }) {
 
 function TradesTab({ trades }: { trades: BotTrade[] }) {
   if (trades.length === 0) {
-    return (<div className="text-center py-12 text-gray-500"><div className="text-4xl mb-2">📜</div><p className="text-sm">No trades yet</p><p className="text-xs">Trades will appear when the bot executes orders.</p></div>);
+    return (<div className="text-center py-12 text-gray-500"><div className="text-4xl mb-2">ðŸ“œ</div><p className="text-sm">No trades yet</p><p className="text-xs">Trades will appear when the bot executes orders.</p></div>);
   }
   return (
     <div className="space-y-2">
@@ -275,7 +275,7 @@ function TradesTab({ trades }: { trades: BotTrade[] }) {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <span className={`text-xs font-bold px-2 py-1 rounded ${trade.side === 'buy' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>{trade.side.toUpperCase()}</span>
-              <div><div className="font-bold text-white text-sm">{trade.pair}</div><div className="text-[10px] text-gray-500">{trade.strategy} • {trade.status}</div></div>
+              <div><div className="font-bold text-white text-sm">{trade.pair}</div><div className="text-[10px] text-gray-500">{trade.strategy} â€¢ {trade.status}</div></div>
             </div>
             <div className="text-right">
               {trade.pnl != null ? (

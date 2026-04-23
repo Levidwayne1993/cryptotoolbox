@@ -1,4 +1,4 @@
-﻿// src/components/Navbar.tsx — v2.0 (added Bot link, fixed encoding)
+// src/components/Navbar.tsx — v3.0 (CryptoBot as homepage, renamed from Bot vs You)
 'use client';
 
 import Link from 'next/link';
@@ -6,10 +6,10 @@ import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 
 const navItems = [
-  { name: 'Dashboard', href: '/', icon: '\u{1F4CA}' },
+  { name: 'CryptoBot', href: '/', icon: '\u{1F916}' },
+  { name: 'Dashboard', href: '/dashboard', icon: '\u{1F4CA}' },
   { name: 'Trade', href: '/trade', icon: '\u{1F4B1}' },
   { name: 'Portfolio', href: '/portfolio', icon: '\u{1F4BC}' },
-  { name: 'Bot vs You', href: '/bot', icon: '\u{1F916}' },
   { name: 'Signals', href: '/signals', icon: '\u{1F4E1}' },
   { name: 'News', href: '/news', icon: '\u{1F4F0}' },
 ];

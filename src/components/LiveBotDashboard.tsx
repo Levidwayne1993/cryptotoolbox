@@ -1,8 +1,13 @@
 ﻿// ============================================================
-// PROJECT: cryptotoolbox
-// FILE: src/components/LiveBotDashboard.tsx  (REPLACE existing)
-// DESCRIPTION: Full pro dashboard — shows all new features
-//   whale alerts, circuit breaker, multi-TF, Kelly sizing, etc.
+// CRYPTOTOOLBOX — src/components/LiveBotDashboard.tsx (REPLACE entire file)
+// Location: cryptotoolbox/src/components/LiveBotDashboard.tsx
+//
+// Changes:
+//   1. Updated all styling from raw gray utilities (bg-gray-800/60,
+//      border-gray-700, etc.) to crypto-* theme classes for consistency
+//      with the rest of the app (bg-crypto-card, border-crypto-border, etc.)
+//   2. Replaced cyan accent colors with crypto-accent theme variable
+//   3. No logic changes — still a read-only Supabase dashboard
 // ============================================================
 
 'use client';
@@ -11,7 +16,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
 
 // ── Interfaces ────────────────────────────────────────────────
-
 interface BotSignal {
   id: string;
   pair: string;
@@ -84,7 +88,6 @@ interface BotSettings {
 }
 
 // ── Helpers ───────────────────────────────────────────────────
-
 function formatUSD(n: number | null | undefined): string {
   if (n == null || isNaN(n)) return '$0.00';
   return n < 0
@@ -110,11 +113,10 @@ function timeAgo(dateStr: string | null | undefined): string {
 
 function pnlColor(n: number | null | undefined): string {
   if (!n || n === 0) return 'text-gray-400';
-  return n > 0 ? 'text-green-400' : 'text-red-400';
+  return n > 0 ? 'text-crypto-green' : 'text-crypto-red';
 }
 
 // ── Component ─────────────────────────────────────────────────
-
 export default function LiveBotDashboard() {
   const [signals, setSignals] = useState<BotSignal[]>([]);
   const [trades, setTrades] = useState<BotTrade[]>([]);
@@ -124,8 +126,7 @@ export default function LiveBotDashboard() {
   const [loading, setLoading] = useState(true);
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
 
-  // ── Data fetching ─────────────────────────────────────────
-
+  // ── Data fetching ───────────────────────────────────────────
   const fetchData = useCallback(async () => {
     try {
       const [signalsRes, tradesRes, positionsRes, settingsRes] = await Promise.all([
@@ -153,22 +154,21 @@ export default function LiveBotDashboard() {
     return () => clearInterval(interval);
   }, [fetchData]);
 
-  // ── Loading ───────────────────────────────────────────────
-
+  // ── Loading ─────────────────────────────────────────────────
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="animate-spin w-8 h-8 border-2 border-cyan-500 border-t-transparent rounded-full" />
+        <div className="animate-spin w-8 h-8 border-2 border-crypto-accent border-t-transparent rounded-full" />
       </div>
     );
   }
 
-  // ── Derived stats ─────────────────────────────────────────
-
+  // ── Derived stats ───────────────────────────────────────────
   const balance = settings?.current_balance ?? 0;
   const initialBalance = settings?.initial_balance ?? balance;
   const positionValue = positions.reduce(
-    (sum, p) => sum + (p.current_price ?? p.entry_price ?? 0) * (p.quantity ?? 0), 0
+    (sum, p) => sum + (p.current_price ?? p.entry_price ?? 0) * (p.quantity ?? 0),
+    0
   );
   const portfolioValue = balance + positionValue;
 
@@ -178,19 +178,21 @@ export default function LiveBotDashboard() {
   const totalRealizedPnl = closedTrades.reduce((s, t) => s + (t.pnl ?? 0), 0);
   const totalUnrealizedPnl = positions.reduce((s, p) => s + (p.unrealized_pnl ?? 0), 0);
   const winRate = closedTrades.length > 0
-    ? (winningTrades.length / closedTrades.length) * 100 : 0;
+    ? (winningTrades.length / closedTrades.length) * 100
+    : 0;
   const avgReturn = closedTrades.length > 0
-    ? totalRealizedPnl / closedTrades.length : 0;
+    ? totalRealizedPnl / closedTrades.length
+    : 0;
   const bestTrade = closedTrades.length > 0
-    ? Math.max(...closedTrades.map(t => t.pnl ?? 0)) : 0;
+    ? Math.max(...closedTrades.map(t => t.pnl ?? 0))
+    : 0;
   const worstTrade = closedTrades.length > 0
-    ? Math.min(...closedTrades.map(t => t.pnl ?? 0)) : 0;
-
+    ? Math.min(...closedTrades.map(t => t.pnl ?? 0))
+    : 0;
   const circuitBreakerActive = settings?.circuit_breaker_active ?? false;
   const circuitBreakerUntil = settings?.circuit_breaker_until;
 
-  // ── Render ────────────────────────────────────────────────
-
+  // ── Render ──────────────────────────────────────────────────
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -200,7 +202,7 @@ export default function LiveBotDashboard() {
           Real-time data from your bot running on Railway &mdash; powered by Supabase
         </p>
         <div className="flex items-center justify-center gap-3">
-          <span className="px-3 py-1 rounded-full text-sm font-medium bg-cyan-500/20 text-cyan-400">
+          <span className="px-3 py-1 rounded-full text-sm font-medium bg-crypto-accent/20 text-crypto-accent">
             {settings?.strategy ?? 'unknown'} ({(settings?.mode ?? 'paper').toUpperCase()})
           </span>
           <span className="text-sm text-gray-500">
@@ -208,7 +210,7 @@ export default function LiveBotDashboard() {
           </span>
           <button
             onClick={() => { setLoading(true); fetchData(); }}
-            className="text-sm text-cyan-400 hover:text-cyan-300 underline"
+            className="text-sm text-crypto-accent hover:text-crypto-accent/80 underline"
           >
             Refresh Now
           </button>
@@ -217,8 +219,8 @@ export default function LiveBotDashboard() {
 
       {/* Circuit Breaker Banner */}
       {circuitBreakerActive && (
-        <div className="bg-red-500/10 border border-red-500/30 rounded-xl p-4 text-center">
-          <p className="text-red-400 font-semibold text-lg">⚠️ Circuit Breaker Active</p>
+        <div className="bg-crypto-red/10 border border-crypto-red/30 rounded-xl p-4 text-center">
+          <p className="text-crypto-red font-semibold text-lg">⚠️ Circuit Breaker Active</p>
           <p className="text-red-300 text-sm mt-1">
             Trading paused due to consecutive losses.
             {circuitBreakerUntil && (
@@ -231,7 +233,7 @@ export default function LiveBotDashboard() {
       {/* Top Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {/* Portfolio Value */}
-        <div className="bg-gray-800/60 border border-gray-700 rounded-xl p-4">
+        <div className="bg-crypto-card border border-crypto-border rounded-xl p-4">
           <p className="text-gray-400 text-sm">Portfolio Value</p>
           <p className="text-2xl font-bold text-white">{formatUSD(portfolioValue)}</p>
           <p className="text-xs text-gray-500 mt-1">
@@ -240,7 +242,7 @@ export default function LiveBotDashboard() {
         </div>
 
         {/* Realized P&L */}
-        <div className="bg-gray-800/60 border border-gray-700 rounded-xl p-4">
+        <div className="bg-crypto-card border border-crypto-border rounded-xl p-4">
           <p className="text-gray-400 text-sm">Realized P&amp;L</p>
           <p className={`text-2xl font-bold ${pnlColor(totalRealizedPnl)}`}>
             {totalRealizedPnl >= 0 ? '+ ' : ''}{formatUSD(totalRealizedPnl)}
@@ -251,9 +253,9 @@ export default function LiveBotDashboard() {
         </div>
 
         {/* Win Rate */}
-        <div className="bg-gray-800/60 border border-gray-700 rounded-xl p-4">
+        <div className="bg-crypto-card border border-crypto-border rounded-xl p-4">
           <p className="text-gray-400 text-sm">Win Rate</p>
-          <p className={`text-2xl font-bold ${winRate >= 50 ? 'text-green-400' : winRate > 0 ? 'text-yellow-400' : 'text-gray-400'}`}>
+          <p className={`text-2xl font-bold ${winRate >= 50 ? 'text-crypto-green' : winRate > 0 ? 'text-yellow-400' : 'text-gray-400'}`}>
             {winRate.toFixed(1)}%
           </p>
           <p className="text-xs text-gray-500 mt-1">
@@ -262,7 +264,7 @@ export default function LiveBotDashboard() {
         </div>
 
         {/* Unrealized P&L */}
-        <div className="bg-gray-800/60 border border-gray-700 rounded-xl p-4">
+        <div className="bg-crypto-card border border-crypto-border rounded-xl p-4">
           <p className="text-gray-400 text-sm">Unrealized P&amp;L</p>
           <p className={`text-2xl font-bold ${pnlColor(totalUnrealizedPnl)}`}>
             {totalUnrealizedPnl >= 0 ? '+ ' : ''}{formatUSD(totalUnrealizedPnl)}
@@ -274,15 +276,15 @@ export default function LiveBotDashboard() {
       </div>
 
       {/* Tab Navigation */}
-      <div className="flex gap-2 border-b border-gray-700 pb-2">
+      <div className="flex gap-2 border-b border-crypto-border pb-2">
         {(['overview', 'positions', 'signals', 'trades'] as const).map(tab => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
             className={`px-4 py-2 rounded-t-lg text-sm font-medium transition-colors ${
               activeTab === tab
-                ? 'bg-cyan-500/20 text-cyan-400 border-b-2 border-cyan-400'
-                : 'text-gray-400 hover:text-white hover:bg-gray-700/50'
+                ? 'bg-crypto-accent/20 text-crypto-accent border-b-2 border-crypto-accent'
+                : 'text-gray-400 hover:text-white hover:bg-crypto-card/60'
             }`}
           >
             {tab === 'overview' ? '📊 Overview' :
@@ -294,7 +296,7 @@ export default function LiveBotDashboard() {
       </div>
 
       {/* Tab Content */}
-      <div className="bg-gray-800/40 border border-gray-700 rounded-xl p-6">
+      <div className="bg-crypto-card/60 border border-crypto-border rounded-xl p-6">
         {activeTab === 'overview' && (
           <OverviewTab
             trades={closedTrades}
@@ -322,10 +324,15 @@ export default function LiveBotDashboard() {
 }
 
 // ── Overview Tab ──────────────────────────────────────────────
-
 function OverviewTab({
-  trades, positions, settings, avgReturn, bestTrade, worstTrade,
-  portfolioValue, initialBalance,
+  trades,
+  positions,
+  settings,
+  avgReturn,
+  bestTrade,
+  worstTrade,
+  portfolioValue,
+  initialBalance,
 }: {
   trades: BotTrade[];
   positions: BotPosition[];
@@ -336,8 +343,10 @@ function OverviewTab({
   portfolioValue: number;
   initialBalance: number;
 }) {
-  const totalReturnPct = initialBalance > 0
-    ? ((portfolioValue - initialBalance) / initialBalance) * 100 : 0;
+  const totalReturnPct =
+    initialBalance > 0
+      ? ((portfolioValue - initialBalance) / initialBalance) * 100
+      : 0;
 
   return (
     <div className="space-y-6">
@@ -345,12 +354,12 @@ function OverviewTab({
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StatCard label="Total Trades" value={String(trades.length)} />
         <StatCard label="Avg Return" value={formatUSD(avgReturn)} color={pnlColor(avgReturn)} />
-        <StatCard label="Best Trade" value={`+ ${formatUSD(bestTrade)}`} color="text-green-400" />
-        <StatCard label="Worst Trade" value={formatUSD(worstTrade)} color="text-red-400" />
+        <StatCard label="Best Trade" value={`+ ${formatUSD(bestTrade)}`} color="text-crypto-green" />
+        <StatCard label="Worst Trade" value={formatUSD(worstTrade)} color="text-crypto-red" />
       </div>
 
       {/* Overall Return */}
-      <div className="bg-gray-700/30 rounded-lg p-4">
+      <div className="bg-crypto-card/40 rounded-lg p-4">
         <p className="text-gray-400 text-sm mb-1">Overall Return</p>
         <div className="flex items-baseline gap-3">
           <span className={`text-3xl font-bold ${pnlColor(totalReturnPct)}`}>
@@ -386,10 +395,12 @@ function OverviewTab({
           <h3 className="text-lg font-semibold text-white mb-3">Recent Trades</h3>
           <div className="space-y-2">
             {trades.slice(0, 5).map(t => (
-              <div key={t.id} className="flex items-center justify-between bg-gray-700/30 rounded-lg p-3">
+              <div key={t.id} className="flex items-center justify-between bg-crypto-card/40 rounded-lg p-3">
                 <div className="flex items-center gap-3">
                   <span className={`px-2 py-0.5 rounded text-xs font-bold ${
-                    t.action === 'BUY' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
+                    t.action === 'BUY'
+                      ? 'bg-crypto-green/20 text-crypto-green'
+                      : 'bg-crypto-red/20 text-crypto-red'
                   }`}>
                     {t.action}
                   </span>
@@ -411,7 +422,6 @@ function OverviewTab({
 }
 
 // ── Positions Tab ─────────────────────────────────────────────
-
 function PositionsTab({ positions }: { positions: BotPosition[] }) {
   if (positions.length === 0) {
     return (
@@ -431,7 +441,7 @@ function PositionsTab({ positions }: { positions: BotPosition[] }) {
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="text-gray-400 border-b border-gray-700">
+            <tr className="text-gray-400 border-b border-crypto-border">
               <th className="text-left py-3 px-2">Pair</th>
               <th className="text-right py-3 px-2">Entry</th>
               <th className="text-right py-3 px-2">Current</th>
@@ -449,9 +459,8 @@ function PositionsTab({ positions }: { positions: BotPosition[] }) {
               const value = (pos.current_price ?? pos.entry_price ?? 0) * (pos.quantity ?? 0);
               const pnl = pos.unrealized_pnl ?? 0;
               const pnlPct = pos.unrealized_pnl_percent ?? 0;
-
               return (
-                <tr key={pos.id} className="border-b border-gray-700/50 hover:bg-gray-700/30">
+                <tr key={pos.id} className="border-b border-crypto-border/50 hover:bg-crypto-card/30">
                   <td className="py-3 px-2">
                     <span className="text-white font-medium">{pos.pair ?? pos.symbol ?? '—'}</span>
                   </td>
@@ -476,7 +485,7 @@ function PositionsTab({ positions }: { positions: BotPosition[] }) {
                   <td className="text-right py-3 px-2 text-yellow-400">
                     {pos.stop_loss_price ? formatUSD(pos.stop_loss_price) : '—'}
                   </td>
-                  <td className="text-right py-3 px-2 text-cyan-400">
+                  <td className="text-right py-3 px-2 text-crypto-accent">
                     {pos.take_profit_price ? formatUSD(pos.take_profit_price) : '—'}
                   </td>
                   <td className="text-right py-3 px-2 text-gray-500">
@@ -493,7 +502,6 @@ function PositionsTab({ positions }: { positions: BotPosition[] }) {
 }
 
 // ── Signals Tab ───────────────────────────────────────────────
-
 function SignalsTab({ signals }: { signals: BotSignal[] }) {
   if (signals.length === 0) {
     return (
@@ -513,7 +521,7 @@ function SignalsTab({ signals }: { signals: BotSignal[] }) {
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="text-gray-400 border-b border-gray-700">
+            <tr className="text-gray-400 border-b border-crypto-border">
               <th className="text-left py-3 px-2">Time</th>
               <th className="text-left py-3 px-2">Pair</th>
               <th className="text-left py-3 px-2">Action</th>
@@ -527,14 +535,16 @@ function SignalsTab({ signals }: { signals: BotSignal[] }) {
           </thead>
           <tbody>
             {signals.map(sig => (
-              <tr key={sig.id} className="border-b border-gray-700/50 hover:bg-gray-700/30">
+              <tr key={sig.id} className="border-b border-crypto-border/50 hover:bg-crypto-card/30">
                 <td className="py-3 px-2 text-gray-500">{timeAgo(sig.created_at)}</td>
                 <td className="py-3 px-2 text-white font-medium">{sig.pair}</td>
                 <td className="py-3 px-2">
                   <span className={`px-2 py-0.5 rounded text-xs font-bold ${
-                    sig.action === 'BUY' ? 'bg-green-500/20 text-green-400' :
-                    sig.action === 'SELL' ? 'bg-red-500/20 text-red-400' :
-                    'bg-gray-500/20 text-gray-400'
+                    sig.action === 'BUY'
+                      ? 'bg-crypto-green/20 text-crypto-green'
+                      : sig.action === 'SELL'
+                      ? 'bg-crypto-red/20 text-crypto-red'
+                      : 'bg-gray-500/20 text-gray-400'
                   }`}>
                     {sig.action}
                   </span>
@@ -545,7 +555,11 @@ function SignalsTab({ signals }: { signals: BotSignal[] }) {
                   </span>
                 </td>
                 <td className="text-right py-3 px-2">
-                  <span className={`${(sig.confidence ?? 0) >= 60 ? 'text-green-400' : (sig.confidence ?? 0) >= 40 ? 'text-yellow-400' : 'text-gray-400'}`}>
+                  <span className={`${
+                    (sig.confidence ?? 0) >= 60 ? 'text-crypto-green' :
+                    (sig.confidence ?? 0) >= 40 ? 'text-yellow-400' :
+                    'text-gray-400'
+                  }`}>
                     {sig.confidence?.toFixed(0) ?? '—'}%
                   </span>
                 </td>
@@ -557,7 +571,11 @@ function SignalsTab({ signals }: { signals: BotSignal[] }) {
                 </td>
                 <td className="text-right py-3 px-2">
                   {sig.multi_timeframe_alignment != null ? (
-                    <span className={`${sig.multi_timeframe_alignment >= 70 ? 'text-green-400' : sig.multi_timeframe_alignment >= 50 ? 'text-yellow-400' : 'text-red-400'}`}>
+                    <span className={`${
+                      sig.multi_timeframe_alignment >= 70 ? 'text-crypto-green' :
+                      sig.multi_timeframe_alignment >= 50 ? 'text-yellow-400' :
+                      'text-crypto-red'
+                    }`}>
                       {sig.multi_timeframe_alignment.toFixed(0)}%
                     </span>
                   ) : '—'}
@@ -565,9 +583,11 @@ function SignalsTab({ signals }: { signals: BotSignal[] }) {
                 <td className="py-3 px-2">
                   {sig.whale_flow ? (
                     <span className={`text-xs px-2 py-0.5 rounded ${
-                      sig.whale_flow === 'bullish' ? 'bg-green-500/20 text-green-400' :
-                      sig.whale_flow === 'bearish' ? 'bg-red-500/20 text-red-400' :
-                      'bg-gray-500/20 text-gray-400'
+                      sig.whale_flow === 'bullish'
+                        ? 'bg-crypto-green/20 text-crypto-green'
+                        : sig.whale_flow === 'bearish'
+                        ? 'bg-crypto-red/20 text-crypto-red'
+                        : 'bg-gray-500/20 text-gray-400'
                     }`}>
                       🐋 {sig.whale_flow}
                     </span>
@@ -583,7 +603,6 @@ function SignalsTab({ signals }: { signals: BotSignal[] }) {
 }
 
 // ── Trades Tab ────────────────────────────────────────────────
-
 function TradesTab({ trades }: { trades: BotTrade[] }) {
   if (trades.length === 0) {
     return (
@@ -603,7 +622,7 @@ function TradesTab({ trades }: { trades: BotTrade[] }) {
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="text-gray-400 border-b border-gray-700">
+            <tr className="text-gray-400 border-b border-crypto-border">
               <th className="text-left py-3 px-2">Time</th>
               <th className="text-left py-3 px-2">Pair</th>
               <th className="text-left py-3 px-2">Action</th>
@@ -619,19 +638,23 @@ function TradesTab({ trades }: { trades: BotTrade[] }) {
           </thead>
           <tbody>
             {trades.map(t => (
-              <tr key={t.id} className="border-b border-gray-700/50 hover:bg-gray-700/30">
+              <tr key={t.id} className="border-b border-crypto-border/50 hover:bg-crypto-card/30">
                 <td className="py-3 px-2 text-gray-500">{timeAgo(t.opened_at)}</td>
                 <td className="py-3 px-2 text-white font-medium">{t.pair}</td>
                 <td className="py-3 px-2">
                   <span className={`px-2 py-0.5 rounded text-xs font-bold ${
-                    t.action === 'BUY' ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'
+                    t.action === 'BUY'
+                      ? 'bg-crypto-green/20 text-crypto-green'
+                      : 'bg-crypto-red/20 text-crypto-red'
                   }`}>
                     {t.action}
                   </span>
                 </td>
                 <td className="py-3 px-2">
                   <span className={`px-2 py-0.5 rounded text-xs ${
-                    t.status === 'closed' ? 'bg-gray-500/20 text-gray-400' : 'bg-blue-500/20 text-blue-400'
+                    t.status === 'closed'
+                      ? 'bg-gray-500/20 text-gray-400'
+                      : 'bg-blue-500/20 text-blue-400'
                   }`}>
                     {t.status}
                   </span>
@@ -667,10 +690,9 @@ function TradesTab({ trades }: { trades: BotTrade[] }) {
 }
 
 // ── Small reusable cards ──────────────────────────────────────
-
 function StatCard({ label, value, color }: { label: string; value: string; color?: string }) {
   return (
-    <div className="bg-gray-700/30 rounded-lg p-3">
+    <div className="bg-crypto-card/40 rounded-lg p-3">
       <p className="text-gray-400 text-xs mb-1">{label}</p>
       <p className={`text-lg font-bold ${color ?? 'text-white'}`}>{value}</p>
     </div>
@@ -679,7 +701,7 @@ function StatCard({ label, value, color }: { label: string; value: string; color
 
 function ConfigCard({ label, value }: { label: string; value: string }) {
   return (
-    <div className="bg-gray-700/30 rounded-lg p-3">
+    <div className="bg-crypto-card/40 rounded-lg p-3">
       <p className="text-gray-400 text-xs mb-1">{label}</p>
       <p className="text-white text-sm font-medium break-words">{value}</p>
     </div>

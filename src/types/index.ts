@@ -1,11 +1,17 @@
 ﻿// ============================================================
-// FILE: src/types/index.ts  (PATCHED v3.0)
-// REPLACE your existing types/index.ts with this ENTIRE file
-// Contains ALL old types (backward-compatible) + ALL new bot types
+// CRYPTOTOOLBOX — src/types/index.ts (REPLACE entire file)
+// Location: cryptotoolbox/src/types/index.ts
+//
+// Changes:
+//   1. Fixed NewsItem sentiment to match API output ('positive' | 'negative' | 'neutral')
+//   2. Simplified StrategyConfig to display-only fields (removed engine fields:
+//      intervalMs, cronSchedule, riskParams, signalThresholds, indicatorWeights)
+//   3. Removed RiskParams, SignalThresholds, IndicatorWeights interfaces (engine-only)
+//   4. Removed MarketDataBundle interface (only used by removed bot-engine)
+//   5. Removed BotExecutionResult interface (only used by removed /api/bot-execute)
 // ============================================================
 
 // ── Core Crypto Data ────────────────────────────────────────
-
 export interface CryptoData {
   id: string;
   symbol: string;
@@ -32,7 +38,6 @@ export interface CryptoData {
 export type CryptoPrice = CryptoData;
 
 // ── Manual Trading Types (trade page, portfolio, trading.ts) ─
-
 export interface Holding {
   coinId: string;
   symbol: string;
@@ -63,7 +68,6 @@ export interface Portfolio {
 }
 
 // ── Signals (original format — used by signals page) ────────
-
 export interface Signal {
   coinId: string;
   symbol: string;
@@ -78,8 +82,7 @@ export interface Signal {
   reason: string;
 }
 
-// ── News (original format — used by news page) ──────────────
-
+// ── News (fixed to match API output) ────────────────────────
 export interface NewsItem {
   id: string;
   title: string;
@@ -88,11 +91,10 @@ export interface NewsItem {
   publishedAt: string;
   created_at?: string;
   thumbnail?: string;
-  sentiment: 'bullish' | 'bearish' | 'neutral';
+  sentiment: 'positive' | 'negative' | 'neutral';
 }
 
 // ── Market Stats (MarketOverview component) ─────────────────
-
 export interface MarketStats {
   totalMarketCap: number;
   totalVolume: number;
@@ -102,8 +104,7 @@ export interface MarketStats {
   fearGreedLabel: string;
 }
 
-// ── Strategy Types (NEW) ────────────────────────────────────
-
+// ── Strategy Types (display-only — engine config lives in Railway) ──
 export type StrategyType =
   | 'day_trader'
   | 'swing_trader'
@@ -120,46 +121,12 @@ export interface StrategyConfig {
   longDescription: string;
   icon: string;
   color: string;
-  intervalMs: number;
-  cronSchedule: string; // Vercel cron expression
-  riskParams: RiskParams;
-  signalThresholds: SignalThresholds;
-  indicatorWeights: IndicatorWeights;
   pros: string[];
   cons: string[];
   recommendedFor: string;
 }
 
-export interface RiskParams {
-  stopLossPercent: number;
-  takeProfitPercent: number;
-  maxPositionPercent: number;
-  maxOpenPositions: number;
-  trailingStop: boolean;
-  trailingStopPercent: number;
-  cooldownMs: number; // min time between trades on same coin
-}
-
-export interface SignalThresholds {
-  buyScore: number;
-  sellScore: number;
-  minConfidence: number;
-}
-
-export interface IndicatorWeights {
-  rsi: number;
-  macd: number;
-  ema: number;
-  bollingerBands: number;
-  volume: number;
-  sentiment: number;
-  fearGreed: number;
-  momentum: number;
-  stochasticRsi: number;
-}
-
-// ── Bot Types (NEW) ─────────────────────────────────────────
-
+// ── Bot Types (read from Supabase — written by Railway bot) ─────
 export type BotMode = 'paper' | 'live';
 export type TradeAction = 'BUY' | 'SELL' | 'HOLD';
 export type TradeStatus = 'open' | 'closed' | 'cancelled';
@@ -172,10 +139,10 @@ export interface BotSettings {
   mode: BotMode;
   initial_balance: number;
   current_balance: number;
-  selected_coins: string[]; // coin IDs to trade
-  autonomous_enabled: boolean; // runs when user is offline
+  selected_coins: string[];
+  autonomous_enabled: boolean;
   max_daily_trades: number;
-  daily_loss_limit_percent: number; // stop bot if daily loss exceeds this
+  daily_loss_limit_percent: number;
   created_at?: string;
   updated_at?: string;
 }
@@ -203,7 +170,7 @@ export interface BotTrade {
   trailing_stop_price?: number;
   opened_at: string;
   closed_at?: string;
-  autonomous: boolean; // was this executed while user was offline?
+  autonomous: boolean;
 }
 
 export interface BotPosition {
@@ -220,7 +187,7 @@ export interface BotPosition {
   stop_loss_price: number;
   take_profit_price: number;
   trailing_stop_price?: number;
-  highest_price: number; // for trailing stop
+  highest_price: number;
   strategy: StrategyType;
   opened_at: string;
 }
@@ -249,7 +216,7 @@ export interface BotStats {
   maxDrawdown: number;
   todayTrades: number;
   todayPnl: number;
-  streak: number; // positive = win streak, negative = loss streak
+  streak: number;
 }
 
 export interface AnalysisResult {
@@ -278,29 +245,6 @@ export interface IndicatorSnapshot {
   stochastic_rsi: number;
   fear_greed: number;
   sentiment_score: number;
-  price_vs_ema: number; // % above/below EMA
-  price_vs_bollinger: string; // 'above_upper' | 'below_lower' | 'within'
-}
-
-// ── Market Data Types ───────────────────────────────────────
-
-export interface MarketDataBundle {
-  prices: CryptoData[];
-  priceHistory: Record<string, number[]>; // coin_id -> price array
-  volumeHistory: Record<string, number[]>;
-  fearGreedIndex: number;
-  sentimentScores: Record<string, number>;
-  timestamp: string;
-}
-
-// ── API Response Types ──────────────────────────────────────
-
-export interface BotExecutionResult {
-  success: boolean;
-  strategy: StrategyType;
-  analyses: AnalysisResult[];
-  trades_executed: BotTrade[];
-  errors: string[];
-  timestamp: string;
-  next_run: string;
+  price_vs_ema: number;
+  price_vs_bollinger: string;
 }
